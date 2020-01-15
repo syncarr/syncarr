@@ -22,9 +22,9 @@ Config = configparser.ConfigParser()
 Config.read(settingsFilename)
 
 is_in_docker = os.environ.get('IS_IN_DOCKER')
-radarr_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
-if radarr_sync_interval_seconds:
-    radarr_sync_interval_seconds = int(radarr_sync_interval_seconds)
+instance_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
+if instance_sync_interval_seconds:
+    instance_sync_interval_seconds = int(instance_sync_interval_seconds)
 
 ########################################################################################################################
 # setup logger
