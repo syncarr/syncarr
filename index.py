@@ -8,8 +8,8 @@ import configparser
 import sys
 import time
 
-DEV = True
-VER = '1.0.1'
+DEV = False
+VER = '1.1.0'
 
 # load config file
 BASE_CONFIG = 'config.conf'
@@ -192,43 +192,71 @@ if (sonarrA_url and radarrA_url) or (sonarrA_url and radarrB_url):
     sys.exit(0)
 
 
-def get_new_content_payload(content, instance_path, instance_profile_id):
-    content['rootFolderPath'] = instance_path
-    content['profileId'] = instance_profile_id
-    return content
+def get_new_content_payload(content, instance_path, instance_profile_id, instanceB_url):
+
+    images = content.get('images')
+    for image in images:
+        image['url'] = '{0}{1}'.format(instanceB_url, image.get('url'))
+        
+    payload = {
+        'title': content.get('title'),
+        'titleSlug': content.get('titleSlug'),
+        'images': images,
+        'qualityProfileId': content.get('qualityProfileId'),
+        'monitored': content.get('monitored'),
+        'rootFolderPath': instance_path,
+        content_id_key: content.get(content_id_key),
+    }
+
+    if is_sonarr:
+        payload['seasons'] = content.get('seasons')
+        payload['tvRageId'] = content.get('tvRageId')
+        payload['seasonFolder'] = content.get('seasonFolder')
+        payload['languageProfileId'] = content.get('languageProfileId')
+        payload['tags'] = content.get('tags')
+        payload['seriesType'] = content.get('seriesType')
+        payload['useSceneNumbering'] = content.get('useSceneNumbering')
+        payload['addOptions'] = content.get('addOptions')
+
+    else:
+        payload['minimumAvailability'] = content.get('minimumAvailability')
+        payload['tmdbId'] = content.get('tmdbId')
+        payload['year'] = content.get('year')
+        payload['profileId'] = instance_profile_id
+
+    logger.debug(payload)
+    return payload
 
 
-def get_content_path(url, key):
-    url = '{0}/{1}?apikey={2}'.format(url, api_content_path, key)
+def get_content_path(instance_url, key):
+    url = '{0}/{1}?apikey={2}'.format(instance_url, api_content_path, key)
     logger.debug('get_content_path: {}'.format(url))
     return url
 
 
-def get_search_path(url, key):
-    url = '{0}/{1}?apikey={2}'.format(url, api_search_path, key)
+def get_search_path(instance_url, key):
+    url = '{0}/{1}?apikey={2}'.format(instance_url, api_search_path, key)
     logger.debug('get_search_path: {}'.format(url))
     return url
 
 
 def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, 
-                 instanceB_profile_id, instanceB_session, instanceB_content_url):
+                 instanceB_profile_id, instanceB_session, instanceB_content_url, instanceB_url):
 
     search_ids = []
 
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
-            logging.info('syncing content title "{0}"'.format(content['title']))
+            logging.info('syncing content title "{0}"'.format(content.get('title')))
 
-            payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id)
-            logger.debug(payload)
-
+            payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id, instanceB_url)
             sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
             if sync_response.status_code != 201 and sync_response.status_code != 200:
-                logger.error('server sync error for {} - response {}'.format(content['title'], sync_response.status_code))
+                logger.error('server sync error for {} - response {}'.format(content.get('title'), sync_response.status_code))
             else:
                 search_ids.append(int(sync_response.json()['id']))
-                logging.info('content title "{0}" synced successfully'.format(content['title']))
+                logging.info('content title "{0}" synced successfully'.format(content.get('title')))
             
     return search_ids
 
@@ -257,7 +285,7 @@ def sync_content():
     instanceB_session = requests.Session()
     instanceB_session.trust_env = False
     instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
-    instanceB_search_url = get_search_path(instanceA_url, instanceA_key)
+    instanceB_search_url = get_search_path(instanceB_url, instanceB_key)
     instanceB_contents = instanceB_session.get(instanceB_content_url)
     if instanceB_contents.status_code != requests.codes.ok:
         logger.error('instanceB server error - response {}'.format(instanceB_contents.status_code))
@@ -282,7 +310,7 @@ def sync_content():
     logger.info('syncing content from instance A to instance B')
     search_ids = sync_servers(
         instanceA_contents, instanceB_contentIds, instanceB_path, 
-        instanceB_profile_id, instanceB_session, instanceB_content_url
+        instanceB_profile_id, instanceB_session, instanceB_content_url, instanceB_url
     )
     search_synced(search_ids, instanceB_search_url, instanceB_session)
 
@@ -292,7 +320,7 @@ def sync_content():
         logger.info('syncing content from instance B to instance A')
         search_ids = sync_servers(
             instanceB_contents, instanceA_contentIds, instanceA_path, 
-            instanceA_profile_id, instanceA_session, instanceA_content_url
+            instanceA_profile_id, instanceA_session, instanceA_content_url, instanceA_url
         )
         search_synced(search_ids, instanceA_search_url, instanceA_session)
 
