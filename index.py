@@ -21,7 +21,11 @@ Config = configparser.ConfigParser()
 Config.read(settingsFilename)
 
 is_in_docker = os.environ.get('IS_IN_DOCKER')
-radarr_sync_interval_seconds = int(os.environ.get('SYNC_INTERVAL_SECONDS'))
+
+try:
+    radarr_sync_interval_seconds = int(os.environ.get('SYNC_INTERVAL_SECONDS'))
+Exception:
+    radarr_sync_interval_seconds = 300
 
 ########################################################################################################################
 # setup logger
@@ -132,8 +136,8 @@ if radarrA_url or radarrB_url:
     api_search_path = 'api/command'
     content_id_key = 'tmdbId'
 
-    instanceA_is_v3 = False if radarrA_is_version_3 === 1 else True
-    instanceB_is_v3 = False if radarrB_is_version_3 === 1 else True
+    instanceA_is_v3 = False if radarrA_is_version_3 == 1 else True
+    instanceB_is_v3 = False if radarrB_is_version_3 == 1 else True
 
 else:
     assert sonarrA_url
@@ -158,6 +162,11 @@ else:
     # sonarr is v3 by default
     instanceA_is_v3 = True
     instanceB_is_v3 = True
+
+# make sure we have radarr OR sonarr
+if (sonarrA_url and radarrA_url) or (sonarrA_url and radarrB_url):
+    logger.error('cannot have sonarr AND radarr profile(s) setup at the same time')
+    sys.exit(0)
 
 
 def get_new_content_payload(content, images):
@@ -245,7 +254,7 @@ def sync_content():
                 payload = get_new_content_payload(content, images)
                 logger.debug(payload)
 
-                sync_response = instanceB_session.post(instanceB_content_url), data=json.dumps(payload))
+                sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
                 if sync_response.status_code != 201 and sync_response.status_code != 200:
                     logger.error('server sync error for {} - response {}'.format(content['title'], sync_response.status_code))
                 else:
@@ -257,7 +266,7 @@ def sync_content():
     logging.info('{} contents synced successfully'.format(len(search_ids)))
     if len(search_ids):
         payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
-        instanceB_session.post(instanceB_search_url), data=json.dumps(payload))
+        instanceB_session.post(instanceB_search_url, data=json.dumps(payload))
 
 
 if is_in_docker:
