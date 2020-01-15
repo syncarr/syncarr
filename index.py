@@ -9,7 +9,7 @@ import sys
 import time
 
 DEV = False
-VER = '1.0.0'
+VER = '1.0.1'
 
 # load config file
 if DEV:
