@@ -1,5 +1,5 @@
 # Syncarr
-Syncs two Radarr servers through the web API.  
+Syncs two Radarr servers from radarrA to radarrB (unidirectional) through the web API.  
 
 ### Configuration
  1. Edit the Config.txt file and enter your servers URLs and API keys for each server.  

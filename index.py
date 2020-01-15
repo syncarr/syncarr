@@ -9,7 +9,7 @@ import sys
 import time
 
 DEV = False
-VER = '1.0.0'
+VER = '1.0.1'
 
 # load config file
 if DEV:
@@ -21,11 +21,9 @@ Config = configparser.ConfigParser()
 Config.read(settingsFilename)
 
 is_in_docker = os.environ.get('IS_IN_DOCKER')
-
-try:
-    radarr_sync_interval_seconds = int(os.environ.get('SYNC_INTERVAL_SECONDS'))
-Exception:
-    radarr_sync_interval_seconds = 300
+radarr_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
+if radarr_sync_interval_seconds:
+    radarr_sync_interval_seconds = int(radarr_sync_interval_seconds)
 
 ########################################################################################################################
 # setup logger
