@@ -59,7 +59,7 @@ def ConfigSectionMap(section):
             dict1[option] = None
     return dict1
 
-def get_config_value(env_key, config_key, config_section, required=False):
+def get_config_value(env_key, config_key, config_section):
     value = ''
     config = ConfigSectionMap(config_section)
 
@@ -68,107 +68,185 @@ def get_config_value(env_key, config_key, config_section, required=False):
     else:
         value = config.get(config_key)
 
-    if required and not value:
-        key = env_key if is_in_docker else config_key
-        logger.error('config var "{}" is required'.format(key))
-        sys.exit(0)
-
     return value
 
 
-# get config settings from ENV or config files
-radarrA_url = get_config_value('RADARR_A_URL', 'url', 'radarrA', True)
-radarrA_key = get_config_value('RADARR_A_KEY', 'key', 'radarrA', True)
+# get config settings from ENV or config files for Radarr
+radarrA_url = get_config_value('RADARR_A_URL', 'url', 'radarrA')
+radarrA_key = get_config_value('RADARR_A_KEY', 'key', 'radarrA')
 radarrA_profile = get_config_value('RADARR_A_PROFILE', 'profile', 'radarrA')
 radarrA_profile_id = get_config_value('RADARR_A_PROFILE_ID', 'profile_id', 'radarrA')
 radarrA_path = get_config_value('RADARR_A_PATH', 'path', 'radarrA')
 
-radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB', True)
-radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB', True)
+radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB')
+radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB')
 radarrB_profile = get_config_value('RADARR_B_PROFILE', 'profile', 'radarrB')
-radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB', True)
-radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB', True)
+radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB')
+radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB')
+
+# get config settings from ENV or config files for Sonarr
+sonarrA_url = get_config_value('SONARR_A_URL', 'url', 'sonarrA')
+sonarrA_key = get_config_value('SONARR_A_KEY', 'key', 'sonarrA')
+sonarrA_profile = get_config_value('SONARR_A_PROFILE', 'profile', 'sonarrA')
+sonarrA_profile_id = get_config_value('SONARR_A_PROFILE_ID', 'profile_id', 'sonarrA')
+sonarrA_path = get_config_value('SONARR_A_PATH', 'path', 'sonarrA')
+
+sonarrB_url = get_config_value('SONARR_B_URL', 'url', 'sonarrB')
+sonarrB_key = get_config_value('SONARR_B_KEY', 'key', 'sonarrB')
+sonarrB_profile = get_config_value('SONARR_B_PROFILE', 'profile', 'sonarrB')
+sonarrB_profile_id = get_config_value('SONARR_B_PROFILE_ID', 'profile_id', 'sonarrB')
+sonarrB_path = get_config_value('SONARR_B_PATH', 'path', 'sonarrB')
+
+# find if we are syncing radarr or sonarr
+instanceA_url = ''
+instanceA_key = ''
+instanceB_url = ''
+instanceB_key = ''
+instanceB_profile_id = ''
+instanceB_path = ''
+api_content_path = ''
+api_search_path = ''
+
+is_radarr_v2 = False
+is_radarr_v3 = False
+is_sonarr = False
+
+if radarrA_url or radarrB_url:
+    assert radarrA_url
+    assert radarrA_key
+    assert radarrB_url
+    assert radarrB_key
+    assert radarrB_profile_id
+    assert radarrB_path
+
+    instanceA_url = radarrA_url
+    instanceA_key = radarrA_key
+    instanceB_url = radarrB_url
+    instanceB_key = radarrB_key
+    instanceB_profile_id = radarrB_profile_id
+    instanceB_path = radarrB_path
+
+    api_content_path = 'api/movie'
+    api_search_path = 'api/command'
+    is_radarr_v2 = True
+
+else:
+    assert sonarrA_url
+    assert sonarrA_key
+    assert sonarrB_url
+    assert sonarrB_key
+    assert sonarrB_profile_id
+    assert sonarrB_path
+
+    instanceA_url = sonarrA_url
+    instanceA_key = sonarrA_key
+    instanceB_url = sonarrB_url
+    instanceB_key = sonarrB_key
+    instanceB_profile_id = sonarrB_profile_id
+    instanceB_path = sonarrB_path
+
+    api_content_path = 'api/movie'
+    api_search_path = 'api/command'
+
+    is_sonarr = True
 
 
-def sync_movies():
+def get_new_content_payload(content, images):
+    payload = {
+        'title': content['title'],
+        'qualityProfileId': content['qualityProfileId'],
+        'titleSlug': content['titleSlug'],
+        'tmdbId': content['tmdbId'],
+        'year': content['year'],
+        'monitored': content['monitored'],
+        'minimumAvailability': 'released',
+        'rootFolderPath': instanceB_path,
+        'images': images,
+        'profileId': instanceB_profile_id,
+    }
 
-    # get radarr sessions
-    radarrA_session = requests.Session()
-    radarrA_session.trust_env = False
-    radarrA_movies = radarrA_session.get('{0}/api/movie?apikey={1}'.format(radarrA_url, radarrA_key))
-    if radarrA_movies.status_code != requests.codes.ok:
-        logger.error('RadarrA server error - response {}'.format(radarrA_movies.status_code))
+    return payload
+
+
+def get_content_path(url, key):
+    return '{0}/{1}?apikey={2}'.format(url, api_content_path, key)
+
+
+def get_search_path(url, key):
+     return '{0}/{1}?apikey={2}'.format(url, api_search_path, key)
+
+
+def sync_content():
+
+    # get sessions
+    instanceA_session = requests.Session()
+    instanceA_session.trust_env = False
+    instanceA_content_url = get_content_path(instanceA_url, instanceA_key)
+    instanceA_contents = instanceA_session.get(instanceA_content_url)
+    if instanceA_contents.status_code != requests.codes.ok:
+        logger.error('instanceA server error - response {}'.format(instanceA_contents.status_code))
         sys.exit(0)
     else:
-        radarrA_movies = radarrA_movies.json()
+        instanceA_contents = instanceA_contents.json()
 
-    radarrB_session = requests.Session()
-    radarrB_session.trust_env = False
-    radarrB_movies = radarrB_session.get('{0}/api/movie?apikey={1}'.format(radarrB_url, radarrB_key))
-    if radarrB_movies.status_code != requests.codes.ok:
-        logger.error('RadarrB server error - response {}'.format(radarrB_movies.status_code))
+    instanceB_session = requests.Session()
+    instanceB_session.trust_env = False
+    instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
+    instanceB_search_url = get_search_path(instanceA_url, instanceA_key)
+    instanceB_contents = instanceB_session.get(instanceB_content_url)
+    if instanceB_contents.status_code != requests.codes.ok:
+        logger.error('instanceB server error - response {}'.format(instanceB_contents.status_code))
         sys.exit(0)
     else:
-        radarrB_movies = radarrB_movies.json()
+        instanceB_contents = instanceB_contents.json()
 
 
-    # get all tmdbIds from radarrA so we can keep track of what movies already exist
-    radarrB_tmdbIds = []
-    for movie_to_sync in radarrB_movies:
-        radarrB_tmdbIds.append(movie_to_sync['tmdbId'])
-    logger.debug('{} movies in radarrB'.format(len(radarrB_tmdbIds)))
+    # get all tmdbIds from instanceA so we can keep track of what contents already exist
+    instanceB_tmdbIds = []
+    for content_to_sync in instanceB_contents:
+        instanceB_tmdbIds.append(content_to_sync['tmdbId'])
+    logger.debug('{} contents in instanceB'.format(len(instanceB_tmdbIds)))
 
-    # sync movies from radarrA to radarrB
+    # sync content from instanceA to instanceB
     searchids = []
-    logger.info('syncing movies')
-    for movie in radarrA_movies:
+    logger.info('syncing content')
+    for content in instanceA_contents:
 
-        # if movie from A is not in B then sync
-        if movie['tmdbId'] not in radarrB_tmdbIds:
-                logging.info('syncing movie title "{0}"'.format(movie['title']))
+        # if content from A is not in B then sync
+        if content['tmdbId'] not in instanceB_tmdbIds:
+                logging.info('syncing content title "{0}"'.format(content['title']))
 
-                # get any images from the movie
-                images = movie['images']
+                # get any images from the content
+                images = content['images']
                 for image in images:
-                    image['url'] = '{0}{1}'.format(radarrB_url, image['url'])
+                    image['url'] = '{0}{1}'.format(instanceB_url, image['url'])
                     logging.debug(image['url'])
 
-                payload = {
-                    'title': movie['title'],
-                    'qualityProfileId': movie['qualityProfileId'],
-                    'titleSlug': movie['titleSlug'],
-                    'tmdbId': movie['tmdbId'],
-                    'year': movie['year'],
-                    'monitored': movie['monitored'],
-                    'minimumAvailability': 'released',
-                    'rootFolderPath': radarrB_path,
-                    'images': images,
-                    'profileId': radarrB_profile_id,
-                }
-
+                payload = get_new_content_payload(content, images)
                 logger.debug(payload)
 
-                sync_response = radarrB_session.post('{0}/api/movie?apikey={1}'.format(radarrB_url, radarrB_key), data=json.dumps(payload))
+                sync_response = instanceB_session.post(instanceB_content_url), data=json.dumps(payload))
                 if sync_response.status_code != 201:
-                    logger.error('server sync error for {} - response {}'.format(movie['title'], sync_response.status_code))
+                    logger.error('server sync error for {} - response {}'.format(content['title'], sync_response.status_code))
                 else:
                     searchids.append(int(sync_response.json()['id']))
-                    logging.info('movie title "{0}" synced successfully'.format(movie['title']))
+                    logging.info('content title "{0}" synced successfully'.format(content['title']))
 
 
-    # now that we've synced all movies search for the newly synced movies
-    logging.info('{} movies synced successfully'.format(len(searchids)))
+    # now that we've synced all contents search for the newly synced contents
+    logging.info('{} contents synced successfully'.format(len(searchids)))
     if len(searchids):
-        payload = { 'name': 'MoviesSearch', 'movieIds': searchid }
-        radarrB_session.post('{0}/api/command?apikey={1}'.format(SyncServer_url, SyncServer_key), data=json.dumps(payload))
+        payload = { 'name': 'contentsSearch', 'contentIds': searchid }
+        instanceB_session.post(instanceB_search_url), data=json.dumps(payload))
 
 
 if is_in_docker:
-    logger.info('syncing every {} seconds'.format(radarr_sync_interval_seconds))
+    logger.info('syncing every {} seconds'.format(instance_sync_interval_seconds))
 
-sync_movies()
+sync_content()
 
 if is_in_docker:
     while True:
-        time.sleep(radarr_sync_interval_seconds)
-        sync_movies()
+        time.sleep(instance_sync_interval_seconds)
+        sync_content()
+
