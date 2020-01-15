@@ -1,2 +1,4 @@
-dev-Config.txt
-Output.txt
+venv
+
+dev-config.conf
+output.txt
