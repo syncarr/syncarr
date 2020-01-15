@@ -1,4 +1,10 @@
-venv
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Distribution / packaging
+.Python
+env/
 
 dev-config.conf
 output.txt
