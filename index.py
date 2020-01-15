@@ -77,12 +77,14 @@ radarrA_key = get_config_value('RADARR_A_KEY', 'key', 'radarrA')
 radarrA_profile = get_config_value('RADARR_A_PROFILE', 'profile', 'radarrA')
 radarrA_profile_id = get_config_value('RADARR_A_PROFILE_ID', 'profile_id', 'radarrA')
 radarrA_path = get_config_value('RADARR_A_PATH', 'path', 'radarrA')
+radarrA_is_version_3 = get_config_value('RADARR_A_VERSION_3', 'version3', 'radarrA')
 
 radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB')
 radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB')
 radarrB_profile = get_config_value('RADARR_B_PROFILE', 'profile', 'radarrB')
 radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB')
 radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB')
+radarrB_is_version_3 = get_config_value('RADARR_B_VERSION_3', 'version3', 'radarrB')
 
 # get config settings from ENV or config files for Sonarr
 sonarrA_url = get_config_value('SONARR_A_URL', 'url', 'sonarrA')
@@ -107,8 +109,8 @@ instanceB_path = ''
 api_content_path = ''
 api_search_path = ''
 
-is_radarr_v2 = False
-is_radarr_v3 = False
+instanceA_is_v3 = False
+instanceB_is_v3 = False
 is_sonarr = False
 
 if radarrA_url or radarrB_url:
@@ -128,7 +130,10 @@ if radarrA_url or radarrB_url:
 
     api_content_path = 'api/movie'
     api_search_path = 'api/command'
-    is_radarr_v2 = True
+    content_id_key = 'tmdbId'
+
+    instanceA_is_v3 = False if radarrA_is_version_3 === 1 else True
+    instanceB_is_v3 = False if radarrB_is_version_3 === 1 else True
 
 else:
     assert sonarrA_url
@@ -145,28 +150,43 @@ else:
     instanceB_profile_id = sonarrB_profile_id
     instanceB_path = sonarrB_path
 
-    api_content_path = 'api/movie'
+    api_content_path = 'api/v3/series'
     api_search_path = 'api/command'
-
+    content_id_key = 'tvdbId'
     is_sonarr = True
+
+    # sonarr is v3 by default
+    instanceA_is_v3 = True
+    instanceB_is_v3 = True
 
 
 def get_new_content_payload(content, images):
-    payload = {
-        'title': content['title'],
-        'qualityProfileId': content['qualityProfileId'],
-        'titleSlug': content['titleSlug'],
-        'tmdbId': content['tmdbId'],
-        'year': content['year'],
-        'monitored': content['monitored'],
-        'minimumAvailability': 'released',
-        'rootFolderPath': instanceB_path,
-        'images': images,
-        'profileId': instanceB_profile_id,
-    }
-
-    return payload
-
+    if is_sonarr:
+        return {
+            'title': content['title'],
+            'qualityProfileId': content['qualityProfileId'],
+            'titleSlug': content['titleSlug'],
+            content_id_key: content[content_id_key],
+            'year': content['year'],
+            'monitored': content['monitored'],
+            'minimumAvailability': 'released',
+            'rootFolderPath': instanceB_path,
+            'images': images,
+            'profileId': instanceB_profile_id,
+        }
+    else :
+        return {
+            'title': content['title'],
+            'qualityProfileId': content['qualityProfileId'],
+            'titleSlug': content['titleSlug'],
+            'tmdbId': content['tmdbId'],
+            'year': content['year'],
+            'monitored': content['monitored'],
+            'minimumAvailability': 'released',
+            'rootFolderPath': instanceB_path,
+            'images': images,
+            'profileId': instanceB_profile_id,
+        }
 
 def get_content_path(url, key):
     return '{0}/{1}?apikey={2}'.format(url, api_content_path, key)
@@ -201,19 +221,19 @@ def sync_content():
         instanceB_contents = instanceB_contents.json()
 
 
-    # get all tmdbIds from instanceA so we can keep track of what contents already exist
-    instanceB_tmdbIds = []
+    # get all contentIds from instanceA so we can keep track of what contents already exist
+    instanceB_contentIds = []
     for content_to_sync in instanceB_contents:
-        instanceB_tmdbIds.append(content_to_sync['tmdbId'])
-    logger.debug('{} contents in instanceB'.format(len(instanceB_tmdbIds)))
+        instanceB_contentIds.append(content_to_sync[content_id_key])
+    logger.debug('{} contents in instanceB'.format(len(instanceB_contentIds)))
 
     # sync content from instanceA to instanceB
-    searchids = []
+    search_ids = []
     logger.info('syncing content')
     for content in instanceA_contents:
 
         # if content from A is not in B then sync
-        if content['tmdbId'] not in instanceB_tmdbIds:
+        if content[content_id_key] not in instanceB_contentIds:
                 logging.info('syncing content title "{0}"'.format(content['title']))
 
                 # get any images from the content
@@ -226,17 +246,17 @@ def sync_content():
                 logger.debug(payload)
 
                 sync_response = instanceB_session.post(instanceB_content_url), data=json.dumps(payload))
-                if sync_response.status_code != 201:
+                if sync_response.status_code != 201 and sync_response.status_code != 200:
                     logger.error('server sync error for {} - response {}'.format(content['title'], sync_response.status_code))
                 else:
-                    searchids.append(int(sync_response.json()['id']))
+                    search_ids.append(int(sync_response.json()['id']))
                     logging.info('content title "{0}" synced successfully'.format(content['title']))
 
 
     # now that we've synced all contents search for the newly synced contents
-    logging.info('{} contents synced successfully'.format(len(searchids)))
-    if len(searchids):
-        payload = { 'name': 'contentsSearch', 'contentIds': searchid }
+    logging.info('{} contents synced successfully'.format(len(search_ids)))
+    if len(search_ids):
+        payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
         instanceB_session.post(instanceB_search_url), data=json.dumps(payload))
 
 
