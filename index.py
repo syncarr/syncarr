@@ -9,7 +9,7 @@ import sys
 import time
 
 DEV = False
-VER = '1.1.0'
+VER = '1.2.0'
 
 # load config file
 BASE_CONFIG = 'config.conf'
