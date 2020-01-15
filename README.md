@@ -2,7 +2,7 @@
 Syncs two Radarr/Sonarr servers through the web API.
 
 ### Configuration
- 1. Edit the Config.txt file and enter your servers URLs and API keys for each server.  
+ 1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
  2. Add the profile id and movie path for the radarr instance the movies will be synced to
     ```ini
     [radarrA]
