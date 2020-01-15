@@ -8,14 +8,15 @@ import configparser
 import sys
 import time
 
-DEV = False
+DEV = True
 VER = '1.0.1'
 
 # load config file
+BASE_CONFIG = 'config.conf'
 if DEV:
-    settingsFilename = os.path.join(os.getcwd(), 'dev-Config.txt')
+    settingsFilename = os.path.join(os.getcwd(), 'dev-{}'.format(BASE_CONFIG))
 else:
-    settingsFilename = os.path.join(os.getcwd(), 'Config.txt')
+    settingsFilename = os.path.join(os.getcwd(), BASE_CONFIG)
 
 Config = configparser.ConfigParser()
 Config.read(settingsFilename)
@@ -35,7 +36,7 @@ else:
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 
 # log to txt file
-fileHandler = logging.FileHandler("./Output.txt")
+fileHandler = logging.FileHandler("./output.txt")
 fileHandler.setFormatter(logFormatter)
 logger.addHandler(fileHandler)
 
@@ -44,7 +45,7 @@ consoleHandler = logging.StreamHandler(sys.stdout)
 consoleHandler.setFormatter(logFormatter)
 logger.addHandler(consoleHandler)
 
-logger.debug('RadarSync Version {}'.format(VER))
+logger.debug('Syncarr Version {}'.format(VER))
 ########################################################################################################################
 
 def ConfigSectionMap(section):
@@ -63,7 +64,11 @@ def ConfigSectionMap(section):
 
 def get_config_value(env_key, config_key, config_section):
     value = ''
-    config = ConfigSectionMap(config_section)
+    config = {}
+    try:
+        config = ConfigSectionMap(config_section)
+    except configparser.NoSectionError:
+        return ''
 
     if is_in_docker:
         value = os.environ.get(env_key)
@@ -100,6 +105,11 @@ sonarrB_key = get_config_value('SONARR_B_KEY', 'key', 'sonarrB')
 sonarrB_profile = get_config_value('SONARR_B_PROFILE', 'profile', 'sonarrB')
 sonarrB_profile_id = get_config_value('SONARR_B_PROFILE_ID', 'profile_id', 'sonarrB')
 sonarrB_path = get_config_value('SONARR_B_PATH', 'path', 'sonarrB')
+
+# get general conf options
+sync_bidirectionally = get_config_value('SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general') or 0
+if sync_bidirectionally:
+    sync_bidirectionally = int(sync_bidirectionally) or 0
 
 # find if we are syncing radarr or sonarr
 instanceA_url = ''
@@ -161,46 +171,74 @@ else:
     instanceA_is_v3 = True
     instanceB_is_v3 = True
 
+
+logger.debug({
+    'instanceA_url': instanceA_url,
+    'instanceA_key': instanceA_key,
+    'instanceB_url': instanceB_url,
+    'instanceB_key': instanceB_key,
+    'instanceB_profile_id': instanceB_profile_id,
+    'instanceB_path': instanceB_path,
+    'api_content_path': api_content_path,
+    'api_search_path': api_search_path,
+    'instanceA_is_v3': instanceA_is_v3,
+    'instanceB_is_v3': instanceB_is_v3,
+    'is_sonarr': is_sonarr
+})
+
 # make sure we have radarr OR sonarr
 if (sonarrA_url and radarrA_url) or (sonarrA_url and radarrB_url):
     logger.error('cannot have sonarr AND radarr profile(s) setup at the same time')
     sys.exit(0)
 
 
-def get_new_content_payload(content, images):
-    if is_sonarr:
-        return {
-            'title': content['title'],
-            'qualityProfileId': content['qualityProfileId'],
-            'titleSlug': content['titleSlug'],
-            content_id_key: content[content_id_key],
-            'year': content['year'],
-            'monitored': content['monitored'],
-            'minimumAvailability': 'released',
-            'rootFolderPath': instanceB_path,
-            'images': images,
-            'profileId': instanceB_profile_id,
-        }
-    else :
-        return {
-            'title': content['title'],
-            'qualityProfileId': content['qualityProfileId'],
-            'titleSlug': content['titleSlug'],
-            'tmdbId': content['tmdbId'],
-            'year': content['year'],
-            'monitored': content['monitored'],
-            'minimumAvailability': 'released',
-            'rootFolderPath': instanceB_path,
-            'images': images,
-            'profileId': instanceB_profile_id,
-        }
+def get_new_content_payload(content, instance_path, instance_profile_id):
+    content['rootFolderPath'] = instance_path
+    content['profileId'] = instance_profile_id
+    return content
+
 
 def get_content_path(url, key):
-    return '{0}/{1}?apikey={2}'.format(url, api_content_path, key)
+    url = '{0}/{1}?apikey={2}'.format(url, api_content_path, key)
+    logger.debug('get_content_path: {}'.format(url))
+    return url
 
 
 def get_search_path(url, key):
-     return '{0}/{1}?apikey={2}'.format(url, api_search_path, key)
+    url = '{0}/{1}?apikey={2}'.format(url, api_search_path, key)
+    logger.debug('get_search_path: {}'.format(url))
+    return url
+
+
+def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, 
+                 instanceB_profile_id, instanceB_session, instanceB_content_url):
+
+    search_ids = []
+
+    for content in instanceA_contents:
+        if content[content_id_key] not in instanceB_contentIds:
+            logging.info('syncing content title "{0}"'.format(content['title']))
+
+            payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id)
+            logger.debug(payload)
+
+            sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
+
+            if sync_response.status_code != 201 and sync_response.status_code != 200:
+                logger.error('server sync error for {} - response {}'.format(content['title'], sync_response.status_code))
+            else:
+                search_ids.append(int(sync_response.json()['id']))
+                logging.info('content title "{0}" synced successfully'.format(content['title']))
+            
+    return search_ids
+
+
+def search_synced(search_ids, instanceB_search_url, instanceB_session):
+    # now that we've synced all contents search for the newly synced contents
+    logging.info('{} contents synced successfully'.format(len(search_ids)))
+    if len(search_ids):
+        payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
+        instanceB_session.post(instanceB_search_url, data=json.dumps(payload))
 
 
 def sync_content():
@@ -228,43 +266,35 @@ def sync_content():
         instanceB_contents = instanceB_contents.json()
 
 
-    # get all contentIds from instanceA so we can keep track of what contents already exist
+    # get all contentIds from instances so we can keep track of what contents already exist
+    instanceA_contentIds = []
+    for content_to_sync in instanceA_contents:
+        instanceA_contentIds.append(content_to_sync[content_id_key])
+    logger.debug('{} contents in instanceA'.format(len(instanceA_contentIds)))
+
     instanceB_contentIds = []
     for content_to_sync in instanceB_contents:
         instanceB_contentIds.append(content_to_sync[content_id_key])
     logger.debug('{} contents in instanceB'.format(len(instanceB_contentIds)))
 
+
     # sync content from instanceA to instanceB
-    search_ids = []
-    logger.info('syncing content')
-    for content in instanceA_contents:
-
-        # if content from A is not in B then sync
-        if content[content_id_key] not in instanceB_contentIds:
-                logging.info('syncing content title "{0}"'.format(content['title']))
-
-                # get any images from the content
-                images = content['images']
-                for image in images:
-                    image['url'] = '{0}{1}'.format(instanceB_url, image['url'])
-                    logging.debug(image['url'])
-
-                payload = get_new_content_payload(content, images)
-                logger.debug(payload)
-
-                sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
-                if sync_response.status_code != 201 and sync_response.status_code != 200:
-                    logger.error('server sync error for {} - response {}'.format(content['title'], sync_response.status_code))
-                else:
-                    search_ids.append(int(sync_response.json()['id']))
-                    logging.info('content title "{0}" synced successfully'.format(content['title']))
+    logger.info('syncing content from instance A to instance B')
+    search_ids = sync_servers(
+        instanceA_contents, instanceB_contentIds, instanceB_path, 
+        instanceB_profile_id, instanceB_session, instanceB_content_url
+    )
+    search_synced(search_ids, instanceB_search_url, instanceB_session)
 
 
-    # now that we've synced all contents search for the newly synced contents
-    logging.info('{} contents synced successfully'.format(len(search_ids)))
-    if len(search_ids):
-        payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
-        instanceB_session.post(instanceB_search_url, data=json.dumps(payload))
+    # if given bidirectional flag then sync from instance B to instance A
+    if sync_bidirectionally:
+        logger.info('syncing content from instance B to instance A')
+        search_ids = sync_servers(
+            instanceB_contents, instanceA_contentIds, instanceA_path, 
+            instanceA_profile_id, instanceA_session, instanceA_content_url
+        )
+        search_synced(search_ids, instanceA_search_url, instanceA_session)
 
 
 if is_in_docker:
@@ -276,4 +306,3 @@ if is_in_docker:
     while True:
         time.sleep(instance_sync_interval_seconds)
         sync_content()
-
