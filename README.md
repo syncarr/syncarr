@@ -1,5 +1,5 @@
 # Syncarr
-Syncs two Radarr/Sonarr servers through the web API.  
+Syncs two Radarr/Sonarr servers through the web API.
 
 ### Configuration
  1. Edit the Config.txt file and enter your servers URLs and API keys for each server.  
@@ -81,3 +81,8 @@ syncarr:
  * Python 3.4 or greater
  * 2x Radarr/Sonarr servers
  * Install requirements.txt
+
+
+
+#### Disclaimer
+Back up your instances before trying this out. I am not responsible for any lost data.
