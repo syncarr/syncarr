@@ -36,6 +36,10 @@ Syncs two Radarr/Sonarr servers through the web API.
      sync_bidirectionally = 1
      ```
 
+To get the `profile_id`, open developer tools (f12) in the browser and go to network tab and reload your *arr instance. There will be a profile network call and under the preview tab, you'll see a list of your profiles you have setup. In my example, I only have three profiles (HD-1080p, 4K, and HD). You need the `id` of what you want your instance B movies to be. Example: If you are syncing 4k radarr to 1080p radarr then get you 1080p profile id from the 1080p radarr instance (1080p is instance B in this example - sync FROM A TO B)
+
+![example of getting profile ids](https://imgur.com/a/23oujx6)
+
 #### How to Run
 You can run this script directly or through a Cron:
 ```bash
