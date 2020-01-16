@@ -7,11 +7,11 @@ Syncs two Radarr/Sonarr servers through the web API.
     ```ini
     [radarrA]
     url = https://example.com:443
-    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    key = XXXXX
     
     [radarrB]
     url = http://127.0.0.1:8080
-    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    key = XXXXX
     profile_id = 1
     path = /data/4k_Movies
     ```
@@ -19,11 +19,11 @@ Syncs two Radarr/Sonarr servers through the web API.
     ```ini
     [sonarrA]
     url = https://example.com:443
-    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    key = XXXXX
     
     [sonarrB]
     url = http://127.0.0.1:8080
-    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    key = XXXXX
     profile_id = 1
     path = /data/4k_Movies
     ```
@@ -52,9 +52,9 @@ syncarr:
     restart: unless-stopped
     environment:
         RADARR_A_URL: https://example.com:443
-        RADARR_A_KEY: FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+        RADARR_A_KEY: XXXXX
         RADARR_B_URL: http://127.0.0.1:8080
-        RADARR_B_KEY: FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+        RADARR_B_KEY: XXXXX
         RADARR_B_PROFILE_ID: 1
         RADARR_B_PATH: /data/4k_Movies
         SYNC_INTERVAL_SECONDS: 300
@@ -69,12 +69,20 @@ syncarr:
     restart: unless-stopped
     environment:
         SONARR_A_URL: https://example.com:443
-        SONARR_A_KEY: FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+        SONARR_A_KEY: XXXXX
         SONARR_B_URL: http://127.0.0.1:8080
-        SONARR_B_KEY: FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+        SONARR_B_KEY: XXXXX
         SONARR_B_PROFILE_ID: 1
         SONARR_B_PATH: /data/4k_Movies
         SYNC_INTERVAL_SECONDS: 300
+```
+
+
+#### Docker
+For just plain docker:
+
+```
+docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE_ID=1 -e RADARR_B_PATH=/data/4k_Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
 ```
 
 #### Requirements
