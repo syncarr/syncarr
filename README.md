@@ -43,7 +43,7 @@ python index.py
 ```
 
 #### Docker Compose
-This script can be ran through a docker container with a set interval (default every 5 minutes)
+This script can run through a docker container with a set interval (default every 5 minutes)
 
 ```
 syncarr:
