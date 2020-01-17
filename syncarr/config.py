@@ -217,15 +217,6 @@ elif sonarrA_url and sonarrB_url:
 
 ########################################################################################################################
 
-assert instanceA_url
-assert instanceA_key
-assert instanceB_url
-assert instanceB_key
-
-assert api_content_path
-assert api_search_path
-assert content_id_key
-
 logger.debug({
     'instanceA_url': instanceA_url,
     'instanceA_key': instanceA_key,
@@ -240,6 +231,15 @@ logger.debug({
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
 })
+
+assert instanceA_url
+assert instanceA_key
+assert instanceB_url
+assert instanceB_key
+
+assert api_content_path
+assert api_search_path
+assert content_id_key
 
 ########################################################################################################################
 # make sure we have radarr OR sonarr
