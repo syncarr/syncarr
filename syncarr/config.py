@@ -40,8 +40,6 @@ def get_config_value(env_key, config_key, config_section):
 
     return value
 
-
-
 ########################################################################################################################
 
 # load config file
@@ -63,10 +61,14 @@ if radarr_sync_interval_seconds:
 # setup logger
 
 # CRITICAL 50, ERROR 40, WARNING 3, INFO 20, DEBUG 10, NOTSET 0
-LOG_LEVEL = get_config_value('LOG_LEVEL', 'log_level', 'general') or 20
+log_level = get_config_value('LOG_LEVEL', 'log_level', 'general') or 20
+if log_level:
+    log_level = int(log_level)
+
+print('log_level', log_level)
 
 logger = logging.getLogger()
-logger.setLevel(LOG_LEVEL)
+logger.setLevel(log_level)
 
 logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 
