@@ -8,205 +8,25 @@ import configparser
 import sys
 import time
 
-DEV = False
-VER = '1.2.1'
-
-# load config file
-BASE_CONFIG = 'config.conf'
-if DEV:
-    settingsFilename = os.path.join(os.getcwd(), 'dev-{}'.format(BASE_CONFIG))
-else:
-    settingsFilename = os.path.join(os.getcwd(), BASE_CONFIG)
-
-Config = configparser.ConfigParser()
-Config.read(settingsFilename)
-
-is_in_docker = os.environ.get('IS_IN_DOCKER')
-instance_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
-if instance_sync_interval_seconds:
-    instance_sync_interval_seconds = int(instance_sync_interval_seconds)
-
-########################################################################################################################
-# setup logger
-logger = logging.getLogger()
-if DEV:
-    logger.setLevel(logging.DEBUG)
-else: 
-    logger.setLevel(logging.INFO)
-logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
-
-# log to txt file
-fileHandler = logging.FileHandler("./output.txt")
-fileHandler.setFormatter(logFormatter)
-logger.addHandler(fileHandler)
-
-# log to std out
-consoleHandler = logging.StreamHandler(sys.stdout)
-consoleHandler.setFormatter(logFormatter)
-logger.addHandler(consoleHandler)
-
-logger.debug('Syncarr Version {}'.format(VER))
-########################################################################################################################
-
-def ConfigSectionMap(section):
-    '''get all config options from config file'''
-    dict1 = {}
-    options = Config.options(section)
-    for option in options:
-        try:
-            dict1[option] = Config.get(section, option)
-        except:
-            print("exception on %s!" % option)
-            dict1[option] = None
-    return dict1
-
-def get_config_value(env_key, config_key, config_section):
-    value = ''
-    config = {}
-    try:
-        config = ConfigSectionMap(config_section)
-    except configparser.NoSectionError:
-        return ''
-
-    if is_in_docker:
-        value = os.environ.get(env_key)
-    else:
-        value = config.get(config_key)
-
-    return value
-
-
-# get config settings from ENV or config files for Radarr
-radarrA_url = get_config_value('RADARR_A_URL', 'url', 'radarrA')
-radarrA_key = get_config_value('RADARR_A_KEY', 'key', 'radarrA')
-radarrA_profile = get_config_value('RADARR_A_PROFILE', 'profile', 'radarrA')
-radarrA_profile_id = get_config_value('RADARR_A_PROFILE_ID', 'profile_id', 'radarrA')
-radarrA_path = get_config_value('RADARR_A_PATH', 'path', 'radarrA')
-radarrA_is_version_3 = get_config_value('RADARR_A_VERSION_3', 'version3', 'radarrA')
-
-radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB')
-radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB')
-radarrB_profile = get_config_value('RADARR_B_PROFILE', 'profile', 'radarrB')
-radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB')
-radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB')
-radarrB_is_version_3 = get_config_value('RADARR_B_VERSION_3', 'version3', 'radarrB')
-
-# get config settings from ENV or config files for Sonarr
-sonarrA_url = get_config_value('SONARR_A_URL', 'url', 'sonarrA')
-sonarrA_key = get_config_value('SONARR_A_KEY', 'key', 'sonarrA')
-sonarrA_profile = get_config_value('SONARR_A_PROFILE', 'profile', 'sonarrA')
-sonarrA_profile_id = get_config_value('SONARR_A_PROFILE_ID', 'profile_id', 'sonarrA')
-sonarrA_path = get_config_value('SONARR_A_PATH', 'path', 'sonarrA')
-
-sonarrB_url = get_config_value('SONARR_B_URL', 'url', 'sonarrB')
-sonarrB_key = get_config_value('SONARR_B_KEY', 'key', 'sonarrB')
-sonarrB_profile = get_config_value('SONARR_B_PROFILE', 'profile', 'sonarrB')
-sonarrB_profile_id = get_config_value('SONARR_B_PROFILE_ID', 'profile_id', 'sonarrB')
-sonarrB_path = get_config_value('SONARR_B_PATH', 'path', 'sonarrB')
-
-# get general conf options
-sync_bidirectionally = get_config_value('SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general') or 0
-if sync_bidirectionally:
-    sync_bidirectionally = int(sync_bidirectionally) or 0
-
-# find if we are syncing radarr or sonarr
-instanceA_url = ''
-instanceA_key = ''
-instanceB_url = ''
-instanceB_key = ''
-instanceB_profile_id = ''
-instanceB_path = ''
-api_content_path = ''
-api_search_path = ''
-
-instanceA_is_v3 = False
-instanceB_is_v3 = False
-is_sonarr = False
-
-if radarrA_url or radarrB_url:
-    assert radarrA_url
-    assert radarrA_key
-    assert radarrB_url
-    assert radarrB_key
-    assert radarrB_profile_id
-    assert radarrB_path
-
-    instanceA_url = radarrA_url
-    instanceA_key = radarrA_key
-    instanceB_url = radarrB_url
-    instanceB_key = radarrB_key
-    instanceB_profile_id = radarrB_profile_id
-    instanceB_path = radarrB_path
-
-    api_content_path = 'api/movie'
-    api_search_path = 'api/command'
-    content_id_key = 'tmdbId'
-
-    instanceA_is_v3 = False if radarrA_is_version_3 == 1 else True
-    instanceB_is_v3 = False if radarrB_is_version_3 == 1 else True
-
-else:
-    assert sonarrA_url
-    assert sonarrA_key
-    assert sonarrB_url
-    assert sonarrB_key
-    assert sonarrB_profile_id
-    assert sonarrB_path
-
-    instanceA_url = sonarrA_url
-    instanceA_key = sonarrA_key
-    instanceB_url = sonarrB_url
-    instanceB_key = sonarrB_key
-    instanceB_profile_id = sonarrB_profile_id
-    instanceB_path = sonarrB_path
-
-    api_content_path = 'api/v3/series'
-    api_search_path = 'api/command'
-    content_id_key = 'tvdbId'
-    is_sonarr = True
-
-    # sonarr is v3 by default
-    instanceA_is_v3 = True
-    instanceB_is_v3 = True
-
-
-logger.debug({
-    'instanceA_url': instanceA_url,
-    'instanceA_key': instanceA_key,
-    'instanceB_url': instanceB_url,
-    'instanceB_key': instanceB_key,
-    'instanceB_profile_id': instanceB_profile_id,
-    'instanceB_path': instanceB_path,
-    'api_content_path': api_content_path,
-    'api_search_path': api_search_path,
-    'instanceA_is_v3': instanceA_is_v3,
-    'instanceB_is_v3': instanceB_is_v3,
-    'is_sonarr': is_sonarr
-})
-
-# make sure we have radarr OR sonarr
-if (sonarrA_url and radarrA_url) or (sonarrA_url and radarrB_url):
-    logger.error('cannot have sonarr AND radarr profile(s) setup at the same time')
-    sys.exit(0)
-
+from syncarr.config import *
 
 def get_new_content_payload(content, instance_path, instance_profile_id, instanceB_url):
 
     images = content.get('images')
     for image in images:
         image['url'] = '{0}{1}'.format(instanceB_url, image.get('url'))
-        
+
     payload = {
-        'title': content.get('title'),
-        'titleSlug': content.get('titleSlug'),
-        'images': images,
-        'qualityProfileId': content.get('qualityProfileId'),
+        content_id_key: content.get(content_id_key),
         'monitored': content.get('monitored'),
         'rootFolderPath': instance_path,
-        content_id_key: content.get(content_id_key),
+        'images': images
     }
 
     if is_sonarr:
+        payload['title'] = content.get('title'),
+        payload['titleSlug'] = content.get('titleSlug'),
+        payload['qualityProfileId'] = content.get('qualityProfileId'),
         payload['seasons'] = content.get('seasons')
         payload['tvRageId'] = content.get('tvRageId')
         payload['seasonFolder'] = content.get('seasonFolder')
@@ -216,11 +36,21 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['useSceneNumbering'] = content.get('useSceneNumbering')
         payload['addOptions'] = content.get('addOptions')
 
-    else:
-        payload['minimumAvailability'] = content.get('minimumAvailability')
+    elif is_radarr:
+        payload['title'] = content.get('title'),
         payload['tmdbId'] = content.get('tmdbId')
+        payload['titleSlug'] = content.get('titleSlug'),
+        payload['qualityProfileId'] = content.get('qualityProfileId'),
+        payload['minimumAvailability'] = content.get('minimumAvailability')
         payload['year'] = content.get('year')
         payload['profileId'] = instance_profile_id
+    
+    elif is_lidarr:
+        payload['artistName'] = content.get('artistName')
+        payload['addOptions'] = content.get('addOptions', {})
+        payload['albumFolder'] = content.get('albumFolder')
+        payload['qualityProfileId'] = instance_profile_id
+        payload['metadataProfileId'] = content.get('metadataProfileId')
 
     logger.debug(payload)
     return payload
