@@ -93,7 +93,6 @@ syncarr:
         SYNC_INTERVAL_SECONDS: 300
 ```
 
-<<<<<<< HEAD
 or
 
 ```
@@ -112,12 +111,7 @@ syncarr:
 ```
 
 #### Docker
-For just plain docker (Radarr example):
-=======
-
-#### Docker
 For just plain docker:
->>>>>>> master
 
 ```
 docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE_ID=1 -e RADARR_B_PATH=/data/4k_Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
