@@ -94,6 +94,9 @@ syncarr:
 ```
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> master
 or
 
 ```
@@ -110,10 +113,13 @@ syncarr:
         LIDARR_B_PATH: /data/4k_Movies
         SYNC_INTERVAL_SECONDS: 300
 ```
+<<<<<<< HEAD
 
 #### Docker
 For just plain docker (Radarr example):
 =======
+=======
+>>>>>>> master
 
 #### Docker
 For just plain docker:
