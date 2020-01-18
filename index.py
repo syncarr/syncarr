@@ -75,16 +75,17 @@ def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path,
 
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
-            logging.info('syncing content title "{0}"'.format(content.get('title')))
+            title = content.get('title') or content.get('artistName')
+            logging.info('syncing content title "{0}"'.format(title))
 
             payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id, instanceB_url)
             sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
             if sync_response.status_code != 201 and sync_response.status_code != 200:
-                logger.error('server sync error for {} - response {}'.format(content.get('title'), sync_response.status_code))
+                logger.error('server sync error for {} - response {}'.format(title, sync_response.status_code))
             else:
                 search_ids.append(int(sync_response.json()['id']))
-                logging.info('content title "{0}" synced successfully'.format(content.get('title')))
+                logging.info('content title "{0}" synced successfully'.format(title))
             
     return search_ids
 
