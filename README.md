@@ -25,7 +25,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API.
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_id = 1
-    path = /data/4k_Movies
+    path = /data/4k_Shows
  
  4. Or if you want to sync two lidarr instances:
     ```ini
@@ -37,7 +37,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API.
     url = http://127.0.0.1:8080
     key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
     profile_id = 1
-    path = /data/4k_Movies
+    path = /data/lossless_music
     ```
 
     **Note**: you cannot have a mix of radarr, lidarr, or sonarr config setups at the same time.
@@ -93,6 +93,7 @@ syncarr:
         SYNC_INTERVAL_SECONDS: 300
 ```
 
+<<<<<<< HEAD
 or
 
 ```
@@ -112,6 +113,11 @@ syncarr:
 
 #### Docker
 For just plain docker (Radarr example):
+=======
+
+#### Docker
+For just plain docker:
+>>>>>>> master
 
 ```
 docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE_ID=1 -e RADARR_B_PATH=/data/4k_Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
