@@ -1,5 +1,5 @@
 # Syncarr
-Syncs two Radarr/Sonarr servers through the web API.
+Syncs two Radarr/Sonarr/Lidarr servers through the web API.
 
 ### Configuration
  1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
@@ -25,12 +25,24 @@ Syncs two Radarr/Sonarr servers through the web API.
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_id = 1
-    path = /data/4k_Movies
+    path = /data/4k_Shows
+ 
+ 4. Or if you want to sync two lidarr instances:
+    ```ini
+    [lidarrA]
+    url = https://example.com:443
+    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    
+    [lidarrB]
+    url = http://127.0.0.1:8080
+    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    profile_id = 1
+    path = /data/lossless_music
     ```
 
-    **Note**: you cannot have both radarr and sonarr config setup at the same time.
+    **Note**: you cannot have a mix of radarr, lidarr, or sonarr config setups at the same time.
 
- 4. By default Syncarr will sync unidirectionally from instance A to instance B but you can add bidirectional syncing with:
+ 5. By default Syncarr will sync unidirectionally from instance A to instance B but you can add bidirectional syncing with:
      ```ini
      [general]
      sync_bidirectionally = 1
@@ -81,9 +93,31 @@ syncarr:
         SYNC_INTERVAL_SECONDS: 300
 ```
 
+<<<<<<< HEAD
+or
+
+```
+syncarr:
+    image: syncarr/syncarr:latest
+    container_name: syncarr
+    restart: unless-stopped
+    environment:
+        LIDARR_A_URL: https://example.com:443
+        LIDARR_A_KEY: FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+        LIDARR_B_URL: http://127.0.0.1:8080
+        LIDARR_B_KEY: FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+        LIDARR_B_PROFILE_ID: 1
+        LIDARR_B_PATH: /data/4k_Movies
+        SYNC_INTERVAL_SECONDS: 300
+```
+
+#### Docker
+For just plain docker (Radarr example):
+=======
 
 #### Docker
 For just plain docker:
+>>>>>>> master
 
 ```
 docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE_ID=1 -e RADARR_B_PATH=/data/4k_Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
@@ -91,9 +125,18 @@ docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RA
 
 #### Requirements
  * Python 3.4 or greater
- * 2x Radarr/Sonarr servers
+ * 2x Radarr/Sonarr/Lidarr servers
  * Install requirements.txt
 
+#### Debugging
+If you need to debug syncarr then you can either set the log level through the config file:
+
+```ini
+[general]
+log_level = 10
+```
+    
+Or in docker, set the `LOG_LEVEL` ENV var. Default is set to `20` (info only) but you can set to `10` to get debug info as well. When pasting debug logs online, **make sure to remove any apikeys and any other data you don't want others to see.**
 
 
 #### Disclaimer
