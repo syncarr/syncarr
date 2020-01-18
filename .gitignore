@@ -1,6 +1,4 @@
-<<<<<<< HEAD
 venv
-=======
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -8,7 +6,6 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
->>>>>>> master
 
 dev-config.conf
 output.txt
