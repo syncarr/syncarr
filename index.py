@@ -10,6 +10,7 @@ import time
 
 from syncarr.config import *
 
+
 def get_new_content_payload(content, instance_path, instance_profile_id, instanceB_url):
 
     images = content.get('images')
@@ -88,17 +89,21 @@ def get_profile_from_id(instance_session, instance_url, instance_key, instance_p
 
 def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, 
                  instanceB_profile_id, instanceB_session, instanceB_content_url, 
-                 instanceB_url, profile_id_filter):
+                 instanceB_url, profile_filter_id):
 
     search_ids = []
+
+    # if given instance A profile id then we want to filter out content without that id
+    if profile_filter_id:
+        logging.info('only filtering content from instance with profile_filter_id "{0}"'.format(profile_filter_id))
 
     # for each content id in instance A, check if it needs to be synced to instance B
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
 
             # if given this, we want to filter from instance A by profile id
-            if profile_id_filter:
-                if profile_id_filter != content.get('qualityProfileId'): continue
+            if profile_filter_id:
+                if profile_filter_id != content.get('qualityProfileId'): continue
 
             title = content.get('title') or content.get('artistName')
             logging.info('syncing content title "{0}"'.format(title))
@@ -126,7 +131,7 @@ def search_synced(search_ids, instance_search_url, instance_session):
 
 
 def sync_content():
-    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile
+    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id
 
     # get sessions
     instanceA_session = requests.Session()
@@ -150,15 +155,30 @@ def sync_content():
     else:
         instanceB_contents = instanceB_contents.json()
 
+
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:
         instanceA_profile_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile, 'A')
     if not instanceB_profile_id and instanceB_profile:
         instanceB_profile_id = get_profile_from_id(instanceB_session, instanceB_url, instanceB_key, instanceB_profile, 'B')
-
     logger.debug({
         'instanceA_profile_id': instanceA_profile_id,
-        'instanceB_profile_id': instanceB_profile_id,
+        'instanceA_profile': instanceA_profile,
+        'instanceA_profile_id': instanceA_profile_id,
+        'instanceB_profile': instanceB_profile,
+    })
+
+
+    # if given profile filters then get ids
+    if not instanceA_profile_id and instanceA_profile_filter:
+        instanceA_profile_filter_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile_filter, 'A')
+    if not instanceB_profile_id and instanceB_profile_filter:
+        instanceB_profile_filter_id = get_profile_from_id(instanceB_session, instanceB_url, instanceB_key, instanceB_profile_filter, 'B')
+    logger.debug({
+        'instanceA_profile_filter': instanceA_profile_filter,
+        'instanceA_profile_filter_id': instanceA_profile_filter_id,
+        'instanceB_profile_filter': instanceB_profile_filter,
+        'instanceB_profile_filter_id': instanceB_profile_filter_id,
     })
 
 
@@ -174,19 +194,12 @@ def sync_content():
     logger.debug('{} contents in instanceB'.format(len(instanceB_contentIds)))
 
 
-    # sync content from instanceA to instanceB
+    # sync content from instanceA to instanceB - then search
     logger.info('syncing content from instance A to instance B')
-
-    # if given instance A profile id then we want to filter out content without that id
-    profile_filter_id = None
-    if instanceA_profile_id:
-        logging.info('only filtering content from instance A with profile_id "{0}"'.format(instanceA_profile_id))
-        profile_filter_id = instanceA_profile_id
-
     search_ids = sync_servers(
         instanceA_contents, instanceB_contentIds, instanceB_path, 
         instanceB_profile_id, instanceB_session, instanceB_content_url, 
-        instanceB_url, profile_filter_id
+        instanceB_url, instanceA_profile_filter_id
     )
     search_synced(search_ids, instanceB_search_url, instanceB_session)
 
@@ -195,16 +208,14 @@ def sync_content():
     if sync_bidirectionally:
         logger.info('syncing content from instance B to instance A')
 
-        if instanceA_profile_id:
-            profile_filter_id = instanceB_profile_id
-
         search_ids = sync_servers(
             instanceB_contents, instanceA_contentIds, instanceA_path, 
             instanceA_profile_id, instanceA_session, instanceA_content_url, 
-            instanceA_url, profile_filter_id
+            instanceA_url, instanceB_profile_filter_id
         )
         search_synced(search_ids, instanceA_search_url, instanceA_session)
 
+########################################################################################################################
 
 if is_in_docker:
     logger.info('syncing every {} seconds'.format(instance_sync_interval_seconds))

@@ -9,8 +9,6 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     [radarrA]
     url = https://example.com:443
     key = XXXXX
-    profile = 4k # optional - will only sync movies with this profile (without this will sync ALL movies from A to B)
-    path = /data/Movies # optional - required if sync_bidirectionally = 1 in general settings
     
     [radarrB]
     url = http://127.0.0.1:8080
@@ -48,13 +46,23 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
      [general]
      sync_bidirectionally = 1
      ```
- 6. syncarr will try to find the `profile_id` given a profile name, if njo match is found, syncarr will exit with error. You can also specify a `profile_id` directly isntead of a profile:
+    If `sync_bidirectionally` is set to true, then instance A will require either `profile_id` or `profile` AND `path`
+
+ 6. syncarr will try to find the `profile_id` given a `profile` name, if no match is found, syncarr will exit with error. You can also specify a `profile_id` directly instead of a `profile` name:
      ```ini
     [radarrB]
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_id = 1
     path = /data/4k_Movies
+    ```
+
+ 7. You can filter content to be synced only from a certain profile/profile_id by adding the `profile_filter` or `profile_filter_id` to instance A. The same goes to instance B if syncing bidirectionally.
+    ```ini
+     [radarrA]
+    url = http://127.0.0.1:8080
+    key = XXXXX
+    profile_filter = 1080p
     ```
 ---
 
@@ -65,10 +73,14 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 
 ---
 ## How to Run
-You can run this script directly or through a Cron:
-```bash
-python index.py
-```
+ 1. install the needed python modules (you'll need pip or you can install the modules manually inside the `requirements.txt` file):
+    ```bash
+    pip install -r requirements.txt
+    ```
+ 2. run this script directly or through a Cron:
+    ```bash
+    python index.py
+    ```
 
 ---
 ## Docker Compose
@@ -106,10 +118,6 @@ syncarr:
         SYNC_INTERVAL_SECONDS: 300
 ```
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> master
 or
 
 ```
@@ -126,24 +134,18 @@ syncarr:
         LIDARR_B_PATH: /data/4k_Movies
         SYNC_INTERVAL_SECONDS: 300
 ```
-<<<<<<< HEAD
-
-#### Docker
-For just plain docker (Radarr example):
-=======
-=======
->>>>>>> master
 
 ---
 ## Docker
-For just plain docker:
->>>>>>> master
+For just plain docker (radarr example):
 
 ```
 docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE=1080p -e RADARR_B_PATH=/data/4k_Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
 ```
 
-**Note:** You can also specify the `PROFILE_ID` directly through the `*ARR_A_PROFILE_ID` and `*ARR_B_PROFILE_ID` ENV variables.
+**Note:** 
+You can also specify the `PROFILE_ID` directly through the `*ARR_A_PROFILE_ID` and `*ARR_B_PROFILE_ID` ENV variables.
+To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILTER_ID` ENV variables. (same for `*arr_B` in bidirectional sync)
 
 ---
 ## Requirements

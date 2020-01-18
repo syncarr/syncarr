@@ -87,12 +87,17 @@ radarrA_url = get_config_value('RADARR_A_URL', 'url', 'radarrA')
 radarrA_key = get_config_value('RADARR_A_KEY', 'key', 'radarrA')
 radarrA_profile = get_config_value('RADARR_A_PROFILE', 'profile', 'radarrA')
 radarrA_profile_id = get_config_value('RADARR_A_PROFILE_ID', 'profile_id', 'radarrA')
+radarrA_profile_filter = get_config_value('RADARR_A_PROFILE_FILTER', 'profile_filter', 'radarrA')
+radarrA_profile_filter_id = get_config_value('RADARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'radarrA')
 radarrA_path = get_config_value('RADARR_A_PATH', 'path', 'radarrA')
 radarrA_is_version_3 = get_config_value('RADARR_A_VERSION_3', 'version3', 'radarrA')
+
 radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB')
 radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB')
 radarrB_profile = get_config_value('RADARR_B_PROFILE', 'profile', 'radarrB')
 radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB')
+radarrB_profile_filter = get_config_value('RADARR_B_PROFILE_FILTER', 'profile_filter', 'radarrB')
+radarrB_profile_filter_id = get_config_value('RADARR_B_PROFILE_FILTER_ID', 'profile_filter_id', 'radarrB')
 radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB')
 radarrB_is_version_3 = get_config_value('RADARR_B_VERSION_3', 'version3', 'radarrB')
 
@@ -101,11 +106,16 @@ sonarrA_url = get_config_value('SONARR_A_URL', 'url', 'sonarrA')
 sonarrA_key = get_config_value('SONARR_A_KEY', 'key', 'sonarrA')
 sonarrA_profile = get_config_value('SONARR_A_PROFILE', 'profile', 'sonarrA')
 sonarrA_profile_id = get_config_value('SONARR_A_PROFILE_ID', 'profile_id', 'sonarrA')
+sonarrA_profile_filter = get_config_value('SONARR_A_PROFILE_FILTER', 'profile_filter', 'sonarrA')
+sonarrA_profile_filter_id = get_config_value('SONARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrA')
 sonarrA_path = get_config_value('SONARR_A_PATH', 'path', 'sonarrA')
+
 sonarrB_url = get_config_value('SONARR_B_URL', 'url', 'sonarrB')
 sonarrB_key = get_config_value('SONARR_B_KEY', 'key', 'sonarrB')
 sonarrB_profile = get_config_value('SONARR_B_PROFILE', 'profile', 'sonarrB')
 sonarrB_profile_id = get_config_value('SONARR_B_PROFILE_ID', 'profile_id', 'sonarrB')
+sonarrB_profile_filter = get_config_value('SONARR_A_PROFILE_FILTER', 'profile_filter', 'sonarrB')
+sonarrB__profile_filter_id = get_config_value('SONARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrB')
 sonarrB_path = get_config_value('SONARR_B_PATH', 'path', 'sonarrB')
 
 # get config settings from ENV or config files for Lidarr
@@ -113,11 +123,16 @@ lidarrA_url = get_config_value('LIDARR_A_URL', 'url', 'lidarrA')
 lidarrA_key = get_config_value('LIDARR_A_KEY', 'key', 'lidarrA')
 lidarrA_profile = get_config_value('LIDARR_A_PROFILE', 'profile', 'lidarrA')
 lidarrA_profile_id = get_config_value('LIDARR_A_PROFILE_ID', 'profile_id', 'lidarrA')
+lidarrA_profile_filter = get_config_value('LIDARR_A_PROFILE_FILTER', 'profile_filter', 'lidarrA')
+lidarrA_profile_filter_id = get_config_value('LIDARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'lidarrA')
 lidarrA_path = get_config_value('LIDARR_A_PATH', 'path', 'lidarrA')
+
 lidarrB_url = get_config_value('LIDARR_B_URL', 'url', 'lidarrB')
 lidarrB_key = get_config_value('LIDARR_B_KEY', 'key', 'lidarrB')
 lidarrB_profile = get_config_value('LIDARR_B_PROFILE', 'profile', 'lidarrB')
 lidarrB_profile_id = get_config_value('LIDARR_B_PROFILE_ID', 'profile_id', 'lidarrB')
+lidarrB_profile_filter = get_config_value('LIDARR_A_PROFILE_FILTER', 'profile_filter', 'lidarrB')
+lidarrB_profile_filter_id = get_config_value('LIDARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'lidarrB')
 lidarrB_path = get_config_value('LIDARR_B_PATH', 'path', 'lidarrB')
 
 # get general conf options
@@ -148,11 +163,14 @@ instanceA_url = ''
 instanceA_key = ''
 instanceA_profile = ''
 instanceA_profile_id = ''
+instanceA_profile_filter = ''
+instanceA_path = ''
 
 instanceB_url = ''
 instanceB_key = ''
 instanceB_profile = ''
 instanceB_profile_id = ''
+instanceB_profile_filter = ''
 instanceB_path = ''
 
 api_content_path = '' # url path to add content
@@ -174,12 +192,16 @@ if radarrA_url and radarrB_url:
     instanceA_key = radarrA_key
     instanceA_profile = radarrA_profile
     instanceA_profile_id = radarrA_profile_id
+    instanceA_profile_filter = radarrA_profile_filter
+    instanceA_profile_filter_id = radarrA_profile_filter_id
     instanceA_path = radarrA_path
     
     instanceB_url = radarrB_url
     instanceB_key = radarrB_key
     instanceB_profile = radarrB_profile
     instanceB_profile_id = radarrB_profile_id
+    instanceB_profile_filter = radarrB_profile_filter
+    instanceB_profile_filter_id = radarrB_profile_filter_id
     instanceB_path = radarrB_path
 
     api_content_path = 'api/movie'
@@ -197,13 +219,16 @@ elif lidarrA_url and lidarrB_url:
     instanceA_key = lidarrA_key
     instanceA_profile = lidarrA_profile
     instanceA_profile_id = lidarrA_profile_id
+    instanceA_profile_filter = lidarrA_profile_filter
+    instanceA_profile_filter_id = lidarrA_profile_filter_id
     instanceA_path = lidarrA_path
-
 
     instanceB_url = lidarrB_url
     instanceB_key = lidarrB_key
     instanceB_profile = lidarrB_profile
     instanceB_profile_id = lidarrB_profile_id
+    instanceB_profile_filter = lidarrB_profile_filter
+    instanceB_profile_filter_id = lidarrB_profile_filter_id
     instanceB_path = lidarrB_path
 
     api_content_path = 'api/v1/artist'
@@ -221,12 +246,16 @@ elif sonarrA_url and sonarrB_url:
     instanceA_key = sonarrA_key
     instanceA_profile = sonarrA_profile
     instanceA_profile_id = sonarrA_profile_id
+    instanceA_profile_filter = sonarrA_profile_filter
+    instanceA_profile_filter_id = sonarrA_profile_filter_id
     instanceA_path = sonarrA_path
 
     instanceB_url = sonarrB_url
     instanceB_key = sonarrB_key
     instanceB_profile = sonarrB_profile
     instanceB_profile_id = sonarrB_profile_id
+    instanceB_profile_filter = sonarrB_profile_filter
+    instanceB_profile_filter_id = sonarrB_profile_filter_id
     instanceB_path = sonarrB_path
 
     api_content_path = 'api/v3/series'
@@ -269,7 +298,7 @@ assert content_id_key
 if sync_bidirectionally:
     assert instanceA_path
     if not instanceB_profile_id and not instanceB_profile:
-        logger.error('profile_id or profile is required for *arr instance A if bidirectionalv is enabled')
+        logger.error('profile_id or profile is required for *arr instance A if sync bidirectionally is enabled')
         sys.exit(0)
 
 
