@@ -18,6 +18,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
 
     payload = {
         content_id_key: content.get(content_id_key),
+        'qualityProfileId': content.get('qualityProfileId'),
         'monitored': content.get('monitored'),
         'rootFolderPath': instance_path,
         'images': images
@@ -26,7 +27,6 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
     if is_sonarr:
         payload['title'] = content.get('title'),
         payload['titleSlug'] = content.get('titleSlug'),
-        payload['qualityProfileId'] = content.get('qualityProfileId'),
         payload['seasons'] = content.get('seasons')
         payload['tvRageId'] = content.get('tvRageId')
         payload['seasonFolder'] = content.get('seasonFolder')
@@ -40,7 +40,6 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['title'] = content.get('title'),
         payload['tmdbId'] = content.get('tmdbId')
         payload['titleSlug'] = content.get('titleSlug'),
-        payload['qualityProfileId'] = content.get('qualityProfileId'),
         payload['minimumAvailability'] = content.get('minimumAvailability')
         payload['year'] = content.get('year')
         payload['profileId'] = instance_profile_id
@@ -49,7 +48,6 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['artistName'] = content.get('artistName')
         payload['addOptions'] = content.get('addOptions', {})
         payload['albumFolder'] = content.get('albumFolder')
-        payload['qualityProfileId'] = instance_profile_id
         payload['metadataProfileId'] = content.get('metadataProfileId')
 
     logger.debug(payload)
@@ -69,18 +67,27 @@ def get_search_path(instance_url, key):
 
 
 def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, 
-                 instanceB_profile_id, instanceB_session, instanceB_content_url, instanceB_url):
+                 instanceB_profile_id, instanceB_session, instanceB_content_url, 
+                 instanceB_url, profile_id_filter=None):
 
     search_ids = []
 
+    # for each content id in instance A, check if it needs to be synced to instance B
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
+
+            # if given this, we want to filter from instance A by profile id
+            if profile_id_filter:
+                if profile_id_filter != content.get('qualityProfileId'): continue
+
             title = content.get('title') or content.get('artistName')
             logging.info('syncing content title "{0}"'.format(title))
 
+            # get the POST payload and sync content to instance B
             payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id, instanceB_url)
             sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
+            # check respons and save content id for searching later on if success
             if sync_response.status_code != 201 and sync_response.status_code != 200:
                 logger.error('server sync error for {} - response {}'.format(title, sync_response.status_code))
             else:
@@ -123,7 +130,7 @@ def sync_content():
         instanceB_contents = instanceB_contents.json()
 
 
-    # get all contentIds from instances so we can keep track of what contents already exist
+    # get all contentIds of all content we are going to try to sync
     instanceA_contentIds = []
     for content_to_sync in instanceA_contents:
         instanceA_contentIds.append(content_to_sync[content_id_key])

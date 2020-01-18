@@ -127,6 +127,7 @@ instanceA_url = ''
 instanceA_key = ''
 instanceB_url = ''
 instanceB_key = ''
+instanceA_profile_id = ''
 instanceB_profile_id = ''
 instanceB_path = ''
 api_content_path = ''
@@ -142,6 +143,7 @@ instanceB_is_v3 = False
 if radarrA_url and radarrB_url:
     assert radarrA_url
     assert radarrA_key
+
     assert radarrB_url
     assert radarrB_key
     assert radarrB_profile_id
@@ -149,6 +151,8 @@ if radarrA_url and radarrB_url:
 
     instanceA_url = radarrA_url
     instanceA_key = radarrA_key
+    instanceA_profile_id = radarrA_profile_id
+    
     instanceB_url = radarrB_url
     instanceB_key = radarrB_key
     instanceB_profile_id = radarrB_profile_id
@@ -165,6 +169,7 @@ if radarrA_url and radarrB_url:
 elif lidarrA_url and lidarrB_url:
     assert lidarrA_url
     assert lidarrA_key
+
     assert lidarrB_url
     assert lidarrB_key
     assert lidarrB_profile_id
@@ -172,6 +177,8 @@ elif lidarrA_url and lidarrB_url:
 
     instanceA_url = lidarrA_url
     instanceA_key = lidarrA_key
+    instanceA_profile_id = lidarrB_profile_id
+
     instanceB_url = lidarrB_url
     instanceB_key = lidarrB_key
     instanceB_profile_id = lidarrB_profile_id
@@ -188,6 +195,7 @@ elif lidarrA_url and lidarrB_url:
 elif sonarrA_url and sonarrB_url:
     assert sonarrA_url
     assert sonarrA_key
+
     assert sonarrB_url
     assert sonarrB_key
     assert sonarrB_profile_id
@@ -195,6 +203,8 @@ elif sonarrA_url and sonarrB_url:
 
     instanceA_url = sonarrA_url
     instanceA_key = sonarrA_key
+    instanceA_profile_id = sonarrA_profile_id
+
     instanceB_url = sonarrB_url
     instanceB_key = sonarrB_key
     instanceB_profile_id = sonarrB_profile_id
@@ -215,6 +225,7 @@ logger.debug({
     'instanceA_key': instanceA_key,
     'instanceB_url': instanceB_url,
     'instanceB_key': instanceB_key,
+    'instanceA_profile_id': instanceA_profile_id,
     'instanceB_profile_id': instanceB_profile_id,
     'instanceB_path': instanceB_path,
     'api_content_path': api_content_path,
