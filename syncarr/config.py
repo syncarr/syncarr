@@ -9,8 +9,6 @@ import sys
 import time
 
 DEV = os.environ.get('DEV', False)
-
-
 VER = '1.2.0'
 
 def ConfigSectionMap(section):
@@ -26,19 +24,14 @@ def ConfigSectionMap(section):
     return dict1
 
 def get_config_value(env_key, config_key, config_section):
-    value = ''
-    _config = {}
+    if is_in_docker:
+        return os.environ.get(env_key)
+
     try:
         _config = ConfigSectionMap(config_section)
+        return _config.get(config_key)
     except configparser.NoSectionError:
         return ''
-
-    if is_in_docker:
-        value = os.environ.get(env_key)
-    else:
-        value = _config.get(config_key)
-
-    return value
 
 ########################################################################################################################
 
@@ -53,9 +46,9 @@ config = configparser.ConfigParser()
 config.read(settingsFilename)
 
 is_in_docker = os.environ.get('IS_IN_DOCKER')
-radarr_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
-if radarr_sync_interval_seconds:
-    radarr_sync_interval_seconds = int(radarr_sync_interval_seconds)
+instance_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
+if instance_sync_interval_seconds:
+    instance_sync_interval_seconds = int(instance_sync_interval_seconds)
 
 ########################################################################################################################
 # setup logger
@@ -64,8 +57,6 @@ if radarr_sync_interval_seconds:
 log_level = get_config_value('LOG_LEVEL', 'log_level', 'general') or 20
 if log_level:
     log_level = int(log_level)
-
-print('log_level', log_level)
 
 logger = logging.getLogger()
 logger.setLevel(log_level)
