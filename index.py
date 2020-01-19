@@ -20,13 +20,13 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         content_id_key: content.get(content_id_key),
         'monitored': content.get('monitored'),
         'rootFolderPath': instance_path,
-        'images': images
+        'images': images,
     }
 
     if is_sonarr:
-        payload['title'] = content.get('title'),
-        payload['titleSlug'] = content.get('titleSlug'),
-        payload['qualityProfileId'] = content.get('qualityProfileId'),
+        payload['title'] = content.get('title')
+        payload['titleSlug'] = content.get('titleSlug')
+        payload['qualityProfileId'] = content.get('qualityProfileId')
         payload['seasons'] = content.get('seasons')
         payload['tvRageId'] = content.get('tvRageId')
         payload['seasonFolder'] = content.get('seasonFolder')
@@ -37,10 +37,10 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['addOptions'] = content.get('addOptions')
 
     elif is_radarr:
-        payload['title'] = content.get('title'),
+        payload['title'] = content.get('title')
         payload['tmdbId'] = content.get('tmdbId')
-        payload['titleSlug'] = content.get('titleSlug'),
-        payload['qualityProfileId'] = content.get('qualityProfileId'),
+        payload['titleSlug'] = content.get('titleSlug')
+        payload['qualityProfileId'] = content.get('qualityProfileId')
         payload['minimumAvailability'] = content.get('minimumAvailability')
         payload['year'] = content.get('year')
         payload['profileId'] = instance_profile_id
