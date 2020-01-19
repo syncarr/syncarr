@@ -8,7 +8,7 @@ import configparser
 import sys
 import time
 
-DEV = os.environ.get('DEV', False)
+DEV = os.environ.get('DEV', True)
 VER = '1.3.0'
 
 def ConfigSectionMap(section):
@@ -211,8 +211,8 @@ if radarrA_url and radarrB_url:
     content_id_key = 'tmdbId'
 
     is_radarr = True
-    instanceA_is_v3 = False if radarrA_is_version_3 else True
-    instanceB_is_v3 = False if radarrB_is_version_3 else True
+    instanceA_is_v3 = True if radarrA_is_version_3 else False
+    instanceB_is_v3 = True if radarrB_is_version_3 else False
 
 elif lidarrA_url and lidarrB_url:
     instanceA_url = lidarrA_url

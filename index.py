@@ -26,8 +26,8 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
     }
 
     if is_sonarr:
-        payload['title'] = content.get('title'),
-        payload['titleSlug'] = content.get('titleSlug'),
+        payload['title'] = content.get('title')
+        payload['titleSlug'] = content.get('titleSlug')
         payload['seasons'] = content.get('seasons')
         payload['tvRageId'] = content.get('tvRageId')
         payload['seasonFolder'] = content.get('seasonFolder')
@@ -38,9 +38,9 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['addOptions'] = content.get('addOptions')
 
     elif is_radarr:
-        payload['title'] = content.get('title'),
+        payload['title'] = content.get('title')
         payload['tmdbId'] = content.get('tmdbId')
-        payload['titleSlug'] = content.get('titleSlug'),
+        payload['titleSlug'] = content.get('titleSlug')
         payload['minimumAvailability'] = content.get('minimumAvailability')
         payload['year'] = content.get('year')
         payload['profileId'] = instance_profile_id
@@ -87,9 +87,25 @@ def get_profile_from_id(instance_session, instance_url, instance_key, instance_p
     return instance_profile_id
 
 
-def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, 
-                 instanceB_profile_id, instanceB_session, instanceB_content_url, 
-                 instanceB_url, profile_filter_id):
+def search_synced(search_ids, instance_search_url, instance_session):
+    # now that we've synced all contents search for the newly synced contents
+    
+    instanceA_search_url = get_search_path(instanceA_url, instanceA_key)
+
+    if len(search_ids):
+        payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
+        instance_session.post(instance_search_url, data=json.dumps(payload))
+
+def sync_servers(
+    instanceA_contents, 
+    instanceB_contentIds, 
+    instanceB_path, 
+    instanceB_profile_id, 
+    instanceB_session, 
+    instanceB_url, 
+    profile_filter_id,
+    instanceB_key,
+):
 
     search_ids = []
 
@@ -110,6 +126,7 @@ def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path,
 
             # get the POST payload and sync content to instance B
             payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id, instanceB_url)
+            instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
             sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
             # check respons and save content id for searching later on if success
@@ -118,16 +135,29 @@ def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path,
             else:
                 search_ids.append(int(sync_response.json()['id']))
                 logging.info('content title "{0}" synced successfully'.format(title))
-            
-    return search_ids
+    
+    logging.info('{0} contents synced successfully'.format(len(search_ids)))
+    instanceB_search_url = get_search_path(instanceB_url, instanceB_key)
+    search_synced(search_ids, instanceB_search_url, instanceB_session)
 
 
-def search_synced(search_ids, instance_search_url, instance_session):
-    # now that we've synced all contents search for the newly synced contents
-    logging.info('{} contents synced successfully'.format(len(search_ids)))
-    if len(search_ids):
-        payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
-        instance_session.post(instance_search_url, data=json.dumps(payload))
+def get_instance_contents(instance_url, instance_key, instance_session, instance_name=''):
+    instance_contentIds = []
+
+    instance_content_url = get_content_path(instance_url, instance_key)
+    instance_contents = instance_session.get(instance_content_url)
+
+    if instance_contents.status_code != requests.codes.ok:
+        logger.error('instance{} server error - response {}'.format(instance_name, instance_contents.status_code))
+        sys.exit(0)
+    else:
+        instance_contents = instance_contents.json()
+
+    for content_to_sync in instance_contents:
+        instance_contentIds.append(content_to_sync[content_id_key])
+
+    logger.debug('{} contents in instance{}'.format(len(instance_contentIds), instance_name))
+    return instance_contents, instance_contentIds
 
 
 def sync_content():
@@ -136,26 +166,9 @@ def sync_content():
     # get sessions
     instanceA_session = requests.Session()
     instanceA_session.trust_env = False
-    instanceA_content_url = get_content_path(instanceA_url, instanceA_key)
-    instanceA_contents = instanceA_session.get(instanceA_content_url)
-    if instanceA_contents.status_code != requests.codes.ok:
-        logger.error('instanceA server error - response {}'.format(instanceA_contents.status_code))
-        sys.exit(0)
-    else:
-        instanceA_contents = instanceA_contents.json()
-
     instanceB_session = requests.Session()
     instanceB_session.trust_env = False
-    instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
-    instanceB_search_url = get_search_path(instanceB_url, instanceB_key)
-    instanceB_contents = instanceB_session.get(instanceB_content_url)
-    if instanceB_contents.status_code != requests.codes.ok:
-        logger.error('instanceB server error - response {}'.format(instanceB_contents.status_code))
-        sys.exit(0)
-    else:
-        instanceB_contents = instanceB_contents.json()
-
-
+    
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:
         instanceA_profile_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile, 'A')
@@ -167,7 +180,6 @@ def sync_content():
         'instanceA_profile_id': instanceA_profile_id,
         'instanceB_profile': instanceB_profile,
     })
-
 
     # if given profile filters then get ids
     if not instanceA_profile_id and instanceA_profile_filter:
@@ -181,39 +193,36 @@ def sync_content():
         'instanceB_profile_filter_id': instanceB_profile_filter_id,
     })
 
+    # get contents to compare
+    instanceA_contents, instanceA_contentIds = get_instance_contents(instanceA_url, instanceA_key, instanceA_session, instance_name='A')
+    instanceB_contents, instanceB_contentIds = get_instance_contents(instanceB_url, instanceB_key, instanceB_session, instance_name='B')
 
-    # get all contentIds of all content we are going to try to sync
-    instanceA_contentIds = []
-    for content_to_sync in instanceA_contents:
-        instanceA_contentIds.append(content_to_sync[content_id_key])
-    logger.debug('{} contents in instanceA'.format(len(instanceA_contentIds)))
-
-    instanceB_contentIds = []
-    for content_to_sync in instanceB_contents:
-        instanceB_contentIds.append(content_to_sync[content_id_key])
-    logger.debug('{} contents in instanceB'.format(len(instanceB_contentIds)))
-
-
-    # sync content from instanceA to instanceB - then search
     logger.info('syncing content from instance A to instance B')
     search_ids = sync_servers(
-        instanceA_contents, instanceB_contentIds, instanceB_path, 
-        instanceB_profile_id, instanceB_session, instanceB_content_url, 
-        instanceB_url, instanceA_profile_filter_id
+        instanceA_contents=instanceA_contents, 
+        instanceB_contentIds=instanceB_contentIds, 
+        instanceB_path=instanceB_path, 
+        instanceB_profile_id=instanceB_profile_id, 
+        instanceB_session=instanceB_session, 
+        instanceB_url=instanceB_url, 
+        profile_filter_id=instanceA_profile_filter_id,
+        instanceB_key=instanceB_key,
     )
-    search_synced(search_ids, instanceB_search_url, instanceB_session)
-
 
     # if given bidirectional flag then sync from instance B to instance A
     if sync_bidirectionally:
         logger.info('syncing content from instance B to instance A')
 
         search_ids = sync_servers(
-            instanceB_contents, instanceA_contentIds, instanceA_path, 
-            instanceA_profile_id, instanceA_session, instanceA_content_url, 
-            instanceA_url, instanceB_profile_filter_id
+            instanceA_contents=instanceB_contents, 
+            instanceB_contentIds=instanceA_contentIds, 
+            instanceB_path=instanceA_path, 
+            instanceB_profile_id=instanceA_profile_id, 
+            instanceB_session=instanceA_session, 
+            instanceB_url=instanceA_url, 
+            profile_filter_id=instanceB_profile_filter_id,
+            instanceB_key=instanceA_key,
         )
-        search_synced(search_ids, instanceA_search_url, instanceA_session)
 
 ########################################################################################################################
 
