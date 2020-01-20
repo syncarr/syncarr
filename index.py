@@ -9,6 +9,7 @@ import sys
 import time
 
 from syncarr.config import *
+from syncarr.paths import *
 
 
 def get_new_content_payload(content, instance_path, instance_profile_id, instanceB_url):
@@ -55,27 +56,14 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
     return payload
 
 
-def get_content_path(instance_url, key):
-    url = '{0}/{1}?apikey={2}'.format(instance_url, api_content_path, key)
-    logger.debug('get_content_path: {}'.format(url))
-    return url
-
-
-def get_search_path(instance_url, key):
-    url = '{0}/{1}?apikey={2}'.format(instance_url, api_search_path, key)
-    logger.debug('get_search_path: {}'.format(url))
-    return url
-
-
-def get_profile_path(instance_url, key):
-    url = '{0}/{1}?apikey={2}'.format(instance_url, api_profile_path, key)
-    logger.debug('get_profile_path: {}'.format(url))
-    return url
-
 def get_profile_from_id(instance_session, instance_url, instance_key, instance_profile, instance_name=''):
     instance_profile_url = get_profile_path(instance_url, instance_key)
     instance_profiles = instance_session.get(instance_profile_url)
-    instance_profiles = instance_profiles.json()
+    try:
+        instance_profiles = instance_profiles.json()
+    except:
+        logger.error(f'Could not decode profile id from {instance_profile_url}')
+        sys.exit(0)
 
     profile = next((item for item in instance_profiles if item["name"].lower() == instance_profile.lower()), False)
     if not profile:
@@ -96,16 +84,9 @@ def search_synced(search_ids, instance_search_url, instance_session):
         payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
         instance_session.post(instance_search_url, data=json.dumps(payload))
 
-def sync_servers(
-    instanceA_contents, 
-    instanceB_contentIds, 
-    instanceB_path, 
-    instanceB_profile_id, 
-    instanceB_session, 
-    instanceB_url, 
-    profile_filter_id,
-    instanceB_key,
-):
+
+def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, instanceB_profile_id, 
+                 instanceB_session, instanceB_url, profile_filter_id, instanceB_key):
 
     search_ids = []
 
@@ -133,7 +114,10 @@ def sync_servers(
             if sync_response.status_code != 201 and sync_response.status_code != 200:
                 logger.error('server sync error for {} - response {}'.format(title, sync_response.status_code))
             else:
-                search_ids.append(int(sync_response.json()['id']))
+                try:
+                    search_ids.append(int(sync_response.json()['id']))
+                except:
+                    logger.error(f'Could not decode sync response from {instanceB_content_url}')
                 logging.info('content title "{0}" synced successfully'.format(title))
     
     logging.info('{0} contents synced successfully'.format(len(search_ids)))
@@ -151,7 +135,11 @@ def get_instance_contents(instance_url, instance_key, instance_session, instance
         logger.error('instance{} server error - response {}'.format(instance_name, instance_contents.status_code))
         sys.exit(0)
     else:
-        instance_contents = instance_contents.json()
+        try:
+            instance_contents = instance_contents.json()
+        except:
+            logger.error(f'Could not decode contents from {instance_content_url}')
+            sys.exit(0)
 
     for content_to_sync in instance_contents:
         instance_contentIds.append(content_to_sync[content_id_key])
@@ -160,15 +148,62 @@ def get_instance_contents(instance_url, instance_key, instance_session, instance
     return instance_contents, instance_contentIds
 
 
+def check_status(instance_session, instance_url, instance_key, instance_name='', checkV3=False):
+    global api_version
+    logger.debug(f'check api_version "{api_version}"')
+
+    instance_status_url = get_status_path(instance_url, instance_key, checkV3)
+    error_message = f'Could not connect to instance{instance_name}: {instance_status_url}'
+    status_response = None
+
+    try:
+        status_response = instance_session.get(instance_status_url)
+
+        # only test again if not lidarr and we haven't tested v3 already
+        if status_response.status_code != 200 and not checkV3 and not is_lidarr:
+            logger.debug(f'check api_version again')
+            status_response = check_status(instance_session, instance_url, instance_key, instance_name, checkV3=True)
+        elif status_response.status_code != 200:
+            logger.error(error_message)
+            sys.exit(0)
+    except:
+        if not checkV3 and not is_lidarr:
+            logger.debug(f'check api_version again exception')
+            status_response = check_status(instance_session, instance_url, instance_key, instance_name, checkV3=True)
+
+    if status_response is None:
+        logger.error(error_message)
+        sys.exit(0)
+    else:
+        try:
+            status_response = status_response.json()
+        except:
+            logger.error(f"Could not retrieve status for {instance_status_url}")
+            sys.exit(0)
+
+        if(status_response.get('error')):
+            logger.error(f"{instance_status_url} error {status_response.get('error')}")
+            sys.exit(0)
+
+        logger.debug(f"{instance_status_url} version {status_response.get('version')}")
+
+    return status_response
+
+
 def sync_content():
-    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id
+    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version
 
     # get sessions
     instanceA_session = requests.Session()
     instanceA_session.trust_env = False
     instanceB_session = requests.Session()
     instanceB_session.trust_env = False
-    
+
+    if not tested_api_version:
+        check_status(instanceA_session, instanceA_url, instanceA_key, instance_name='A')
+        check_status(instanceB_session, instanceB_url, instanceB_key, instance_name='B')
+        tested_api_version = True
+            
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:
         instanceA_profile_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile, 'A')
