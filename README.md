@@ -39,11 +39,11 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     ```ini
     [lidarrA]
     url = https://example.com:443
-    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    key = XXXXX
     
     [lidarrB]
     url = http://127.0.0.1:8080
-    key = FCKGW-RHQQ2-YXRKT-8TG6W-2B7Q8
+    key = XXXXX
     profile = lossless
     path = /data/lossless_music
     ```
