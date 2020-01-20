@@ -1,5 +1,12 @@
 # Syncarr
-Syncs two Radarr/Sonarr/Lidarr servers through the web API.
+Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing your 4k to 1080p media libraries.
+
+* Supports Radarr/Sonarr version 2 and 3.
+* Can sync by `profile` name or `profile_id`
+* Filter what media gets synced by `profile` name or `profile_id`
+* Supports Docker for multiple instances
+* Can set interval for syncing
+* Support two way sync (one way by default)
 
 ### Configuration
  1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
