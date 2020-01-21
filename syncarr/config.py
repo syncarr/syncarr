@@ -185,7 +185,6 @@ elif sonarrA_url and sonarrB_url:
 
 ########################################################################################################################
 
-
 logger.debug({
     'instanceA_url': instanceA_url,
     'instanceA_key': instanceA_key,
@@ -199,10 +198,21 @@ logger.debug({
     'is_lidarr': is_lidarr,
 })
 
-assert instanceA_url
-assert instanceA_key
-assert instanceB_url
-assert instanceB_key
+if not instanceA_url:
+    logger.error('missing URL for instance A')
+    sys.exit(0)
+
+if not instanceA_key:
+    logger.error('missing API key for instance A')
+    sys.exit(0)
+
+if not instanceA_url:
+    logger.error('missing URL for instance B')
+    sys.exit(0)
+
+if not instanceB_key:
+    logger.error('missing API key for instance B')
+    sys.exit(0)
 
 assert api_content_path
 assert api_search_path

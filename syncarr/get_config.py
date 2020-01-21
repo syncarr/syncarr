@@ -2,8 +2,8 @@ import os
 import configparser
 
 
-DEV = os.environ.get('DEV', True)
-VER = '1.4.0'
+DEV = os.environ.get('DEV', False)
+VER = '1.4.1'
 
 
 def ConfigSectionMap(section):

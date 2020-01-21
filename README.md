@@ -161,8 +161,8 @@ To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILT
  * Install requirements.txt
  * 
 ---
-## Debugging
-If you need to debug syncarr then you can either set the log level through the config file:
+## Troubleshooting
+If you need to troubleshoot syncarr, then you can either set the log level through the config file:
 
 ```ini
 [general]
