@@ -11,7 +11,6 @@ def get_path(instance_url, api_path, key, checkV3=False):
         api_profile_path = 'qualityprofile'
 
     url = f"{instance_url}/api/{api_version}{api_path}?apikey={key}"
-    print(url)
     return url
 
 
