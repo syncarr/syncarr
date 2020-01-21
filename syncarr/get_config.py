@@ -2,7 +2,7 @@ import os
 import configparser
 
 
-DEV = os.environ.get('DEV', False)
+DEV = os.environ.get('DEV')
 VER = '1.4.1'
 
 
