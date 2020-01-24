@@ -8,15 +8,28 @@ import configparser
 import sys
 import time
 
-from syncarr.config import *
-from syncarr.paths import *
+from config import (
+    instanceA_url, instanceA_key,  instanceA_path, instanceA_profile,
+    instanceA_profile_id, instanceA_profile_filter, instanceA_profile_filter_id,
+    instanceA_language_id, instanceA_language,
+
+    instanceB_url, instanceB_key, instanceB_path, instanceB_profile,
+    instanceB_profile_id, instanceB_profile_filter, instanceB_profile_filter_id,
+    instanceB_language_id, instanceB_language,
+
+    content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
+    get_status_path, get_content_path, get_search_path, get_profile_path, get_language_path,
+
+    is_in_docker, instance_sync_interval_seconds, sync_bidirectionally,
+    tested_api_version, api_version, V3_API_PATH,
+)
 
 
-def get_new_content_payload(content, instance_path, instance_profile_id, instanceB_url):
+def get_new_content_payload(content, instance_path, instance_profile_id, instance_url, instance_language_id=None):
 
     images = content.get('images')
     for image in images:
-        image['url'] = '{0}{1}'.format(instanceB_url, image.get('url'))
+        image['url'] = '{0}{1}'.format(instance_url, image.get('url'))
 
     payload = {
         content_id_key: content.get(content_id_key),
@@ -32,7 +45,8 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['seasons'] = content.get('seasons')
         payload['tvRageId'] = content.get('tvRageId')
         payload['seasonFolder'] = content.get('seasonFolder')
-        payload['languageProfileId'] = content.get('languageProfileId')
+        payload['languageProfileId'] = instance_language_id if instance_language_id is not None else content.get(
+            'languageProfileId')
         payload['tags'] = content.get('tags')
         payload['seriesType'] = content.get('seriesType')
         payload['useSceneNumbering'] = content.get('useSceneNumbering')
@@ -42,6 +56,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['title'] = content.get('title')
         payload['tmdbId'] = content.get('tmdbId')
         payload['titleSlug'] = content.get('titleSlug')
+
     elif is_lidarr:
         payload['artistName'] = content.get('artistName')
         payload['addOptions'] = content.get('addOptions', {})
@@ -54,35 +69,76 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
 
 def get_profile_from_id(instance_session, instance_url, instance_key, instance_profile, instance_name=''):
     instance_profile_url = get_profile_path(instance_url, instance_key)
-    instance_profiles = instance_session.get(instance_profile_url)
+    profiles_response = instance_session.get(instance_profile_url)
+    if profiles_response.status_code != 200:
+        logger.error(
+            f'Could not get profile id from {instance_profile_url}')
+        sys.exit(0)
+
+    instance_profiles = None
     try:
-        instance_profiles = instance_profiles.json()
+        instance_profiles = profiles_response.json()
     except:
-        logger.error(f'Could not decode profile id from {instance_profile_url}')
+        logger.error(
+            f'Could not decode profile id from {instance_profile_url}')
         sys.exit(0)
 
     profile = next((item for item in instance_profiles if item["name"].lower() == instance_profile.lower()), False)
     if not profile:
-        logger.error('Could not find profile_id for instance {} profile {}'.format(instance_name, instance_profile))
+        logger.error('Could not find profile_id for instance {} profile {}'.format(
+            instance_name, instance_profile))
         sys.exit(0)
 
     instance_profile_id = profile.get('id')
-    logger.debug('found profile_id "{}" from profile "{}" for instance {}'.format(instance_profile_id, instance_profile, instance_name))
+    logger.debug('found profile_id "{}" from profile "{}" for instance {}'.format(
+        instance_profile_id, instance_profile, instance_name))
+
     return instance_profile_id
+
+
+def get_language_from_id(instance_session, instance_url, instance_key, instance_language, instance_name=''):
+    instance_language_url = get_language_path(instance_url, instance_key)
+    language_response = instance_session.get(instance_language_url)
+    if language_response.status_code != 200:
+        logger.error(
+            f'Could not get language id from {instance_language_url} - only works on sonarr v3')
+        return None
+
+    instance_languages = None
+    try:
+        instance_languages = language_response.json()
+    except:
+        logger.error(
+            f'Could not decode language id from {instance_language_url}')
+        sys.exit(0)
+
+    instance_languages = instance_languages[0]['languages']
+    language = next((item for item in instance_languages if item["name"].lower() == instance_language.lower()), False)
+
+    if not language:
+        logger.error('Could not find language_id for instance {} language {}'.format(
+            instance_name, instance_language))
+        sys.exit(0)
+
+    instance_language_id = language.get('id')
+    logger.debug('found language_id "{}" from language "{}" for instance {}'.format(
+        instance_language_id, instance_language, instance_name))
+
+    return instance_language_id
 
 
 def search_synced(search_ids, instance_search_url, instance_session):
     # now that we've synced all contents search for the newly synced contents
-    
-    instanceA_search_url = get_search_path(instanceA_url, instanceA_key)
+    instance_search_url = get_search_path(instanceA_url, instanceA_key)
 
     if len(search_ids):
         payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
         instance_session.post(instance_search_url, data=json.dumps(payload))
 
 
-def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, instanceB_profile_id, 
-                 instanceB_session, instanceB_url, profile_filter_id, instanceB_key):
+def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
+                 instanceB_path, instanceB_profile_id, instanceB_session, 
+                 instanceB_url, profile_filter_id, instanceB_key):
 
     search_ids = []
 
@@ -102,7 +158,13 @@ def sync_servers(instanceA_contents, instanceB_contentIds, instanceB_path, insta
             logging.info('syncing content title "{0}"'.format(title))
 
             # get the POST payload and sync content to instance B
-            payload = get_new_content_payload(content, instanceB_path, instanceB_profile_id, instanceB_url)
+            payload = get_new_content_payload(
+                content=content, 
+                instance_path=instanceB_path, 
+                instance_profile_id=instanceB_profile_id, 
+                instance_url=instanceB_url, 
+                instance_language_id=instanceA_language_id,
+            )
             instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
             sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
@@ -127,7 +189,7 @@ def get_instance_contents(instance_url, instance_key, instance_session, instance
     instance_content_url = get_content_path(instance_url, instance_key)
     instance_contents = instance_session.get(instance_content_url)
 
-    if instance_contents.status_code != requests.codes.ok:
+    if instance_contents.status_code != 200:
         logger.error('instance{} server error - response {}'.format(instance_name, instance_contents.status_code))
         sys.exit(0)
     else:
@@ -187,7 +249,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
 
 
 def sync_content():
-    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version
+    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language
 
     # get sessions
     instanceA_session = requests.Session()
@@ -202,26 +264,46 @@ def sync_content():
             
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:
-        instanceA_profile_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile, 'A')
+        instanceA_profile_id = get_profile_from_id(
+            instanceA_session, instanceA_url, instanceA_key, instanceA_profile, 'A')
     if not instanceB_profile_id and instanceB_profile:
-        instanceB_profile_id = get_profile_from_id(instanceB_session, instanceB_url, instanceB_key, instanceB_profile, 'B')
+        instanceB_profile_id = get_profile_from_id(
+            instanceB_session, instanceB_url, instanceB_key, instanceB_profile, 'B')
     logger.debug({
         'instanceA_profile_id': instanceA_profile_id,
         'instanceA_profile': instanceA_profile,
-        'instanceA_profile_id': instanceA_profile_id,
+        'instanceB_profile_id': instanceB_profile_id,
         'instanceB_profile': instanceB_profile,
     })
 
-    # if given profile filters then get ids
-    if not instanceA_profile_id and instanceA_profile_filter:
-        instanceA_profile_filter_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile_filter, 'A')
-    if not instanceB_profile_id and instanceB_profile_filter:
-        instanceB_profile_filter_id = get_profile_from_id(instanceB_session, instanceB_url, instanceB_key, instanceB_profile_filter, 'B')
+    # if given language instead of language id then try to find the lanaguage id
+    # only for sonarr v3
+    if is_sonarr:
+        if not instanceA_language_id and instanceA_language:
+            instanceA_language_id = get_language_from_id(
+                instance_session=instanceA_session, 
+                instance_url=instanceA_url, 
+                instance_key=instanceA_key, 
+                instance_language=instanceA_language, 
+                instance_name='A'
+            )
+
+        if not instanceB_language_id and instanceB_language:
+            instanceB_language_id = get_language_from_id(
+                instance_session=instanceB_session, 
+                instance_url=instanceB_url, 
+                instance_key=instanceB_key, 
+                instance_language=instanceB_language, 
+                instance_name='B'
+            )
+    
     logger.debug({
-        'instanceA_profile_filter': instanceA_profile_filter,
-        'instanceA_profile_filter_id': instanceA_profile_filter_id,
-        'instanceB_profile_filter': instanceB_profile_filter,
-        'instanceB_profile_filter_id': instanceB_profile_filter_id,
+        'instanceA_language_id': instanceA_language_id,
+        'instanceA_language': instanceA_language,
+        'instanceB_language_id': instanceB_language_id,
+        'instanceB_language': instanceB_language,
+        'is_sonarr': is_sonarr,
+        'api_version': api_version,
     })
 
     # get contents to compare
@@ -229,9 +311,10 @@ def sync_content():
     instanceB_contents, instanceB_contentIds = get_instance_contents(instanceB_url, instanceB_key, instanceB_session, instance_name='B')
 
     logger.info('syncing content from instance A to instance B')
-    search_ids = sync_servers(
+    sync_servers(
         instanceA_contents=instanceA_contents, 
         instanceB_contentIds=instanceB_contentIds, 
+        instanceB_language_id=instanceB_language_id,
         instanceB_path=instanceB_path, 
         instanceB_profile_id=instanceB_profile_id, 
         instanceB_session=instanceB_session, 
@@ -244,9 +327,10 @@ def sync_content():
     if sync_bidirectionally:
         logger.info('syncing content from instance B to instance A')
 
-        search_ids = sync_servers(
+        sync_servers(
             instanceA_contents=instanceB_contents, 
             instanceB_contentIds=instanceA_contentIds, 
+            instanceB_language_id=instanceA_language_id,
             instanceB_path=instanceA_path, 
             instanceB_profile_id=instanceA_profile_id, 
             instanceB_session=instanceA_session, 

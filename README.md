@@ -56,7 +56,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     If `sync_bidirectionally` is set to true, then instance A will require either `profile_id` or `profile` AND `path`
 
  6. syncarr will try to find the `profile_id` given a `profile` name, if no match is found, syncarr will exit with error. You can also specify a `profile_id` directly instead of a `profile` name:
-     ```ini
+    ```ini
     [radarrB]
     url = http://127.0.0.1:8080
     key = XXXXX
@@ -66,10 +66,18 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 
  7. You can filter content to be synced only from a certain profile/profile_id by adding the `profile_filter` or `profile_filter_id` to instance A. The same goes to instance B if syncing bidirectionally.
     ```ini
-     [radarrA]
+    [radarrA]
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_filter = 1080p
+    ```
+
+ 8. Sonarr v3 can specify a `language` or `langauge_id` (for Docker `SONARR_A/B_LANGUAGE` or `SONARR_A/B_LANGUAGE_ID`) to specify a show's language when copying over a show. When syncing SonarrA to SonarrB:
+    ```ini
+    [sonarrB]
+    url = http://127.0.0.1:8080
+    key = XXXXX
+    language = Vietnamese # when using docker -> SONARR_B_LANGUAGE: Vietnamese
     ```
 ---
 
