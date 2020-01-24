@@ -72,7 +72,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     profile_filter = 1080p
     ```
 
- 8. Sonarr v3 can specify a `language` or `langauge_id` (for Docker `SONARR_A/B_LANGUAGE` or `SONARR_A/B_LANGUAGE_ID`) to specify a show's language when copying over a show. When syncing SonarrA to SonarrB:
+ 8. Sonarr v3 can specify a `language` or `language_id` (for Docker `SONARR_A/B_LANGUAGE` or `SONARR_A/B_LANGUAGE_ID`) to specify a show's language when copying over a show. When syncing SonarrA to SonarrB:
     ```ini
     [sonarrB]
     url = http://127.0.0.1:8080
