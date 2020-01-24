@@ -10,7 +10,6 @@ WORKDIR /app
 COPY requirements.txt  requirements.txt 
 RUN pip install -r requirements.txt 
 
-COPY index.py index.py
-COPY syncarr syncarr
+COPY . .
 
 CMD ["python", "/app/index.py"]
