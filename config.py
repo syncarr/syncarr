@@ -137,11 +137,11 @@ lidarrB_path = get_config_value('LIDARR_B_PATH', 'path', 'lidarrB')
 sync_bidirectionally = get_config_value(
     'SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general') or 0
 if sync_bidirectionally:
-    sync_bidirectionally = int(sync_bidirectionally) or 0
+    sync_bidirectionally = int(sync_bidirectionally)
 auto_search = get_config_value(
-    'SYNCARR_AUTO_SEARCH', 'auto_search', 'general') or 0
+    'SYNCARR_AUTO_SEARCH', 'auto_search', 'general') or 1
 if auto_search:
-    auto_search = int(auto_search) or 0
+    auto_search = int(auto_search)
 
 
 ########################################################################################################################
