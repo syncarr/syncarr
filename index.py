@@ -20,7 +20,7 @@ from config import (
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
     get_status_path, get_content_path, get_search_path, get_profile_path, get_language_path,
 
-    is_in_docker, instance_sync_interval_seconds, sync_bidirectionally,
+    is_in_docker, instance_sync_interval_seconds, sync_bidirectionally, auto_search,
     tested_api_version, api_version, V3_API_PATH,
 )
 
@@ -139,7 +139,7 @@ def search_synced(search_ids, instance_search_url, instance_session):
 def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
                  instanceB_path, instanceB_profile_id, instanceB_session, 
                  instanceB_url, profile_filter_id, instanceB_key):
-
+    global auto_search
     search_ids = []
 
     # if given instance A profile id then we want to filter out content without that id
@@ -180,7 +180,9 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
     
     logging.info('{0} contents synced successfully'.format(len(search_ids)))
     instanceB_search_url = get_search_path(instanceB_url, instanceB_key)
-    search_synced(search_ids, instanceB_search_url, instanceB_session)
+
+    if auto_search:
+        search_synced(search_ids, instanceB_search_url, instanceB_session)
 
 
 def get_instance_contents(instance_url, instance_key, instance_session, instance_name=''):

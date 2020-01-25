@@ -46,45 +46,29 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     key = XXXXX
     profile = lossless
     path = /data/lossless_music
-    ```
 
- 5. By default Syncarr will sync unidirectionally from instance A to instance B but you can add bidirectional syncing with:
-     ```ini
-     [general]
-     sync_bidirectionally = 1
-     ```
-    If `sync_bidirectionally` is set to true, then instance A will require either `profile_id` or `profile` AND `path`
+    **Note** you cannot have a mix of radarr, lidarr, or sonarr config setups at the same time.
 
- 6. syncarr will try to find the `profile_id` given a `profile` name, if no match is found, syncarr will exit with error. You can also specify a `profile_id` directly instead of a `profile` name:
+ 5. Optional Configuration
     ```ini
-    [radarrB]
+    [sonarrA]
     url = http://127.0.0.1:8080
     key = XXXXX
-    profile_id = 1
-    path = /data/4k_Movies
-    ```
+    profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
 
- 7. You can filter content to be synced only from a certain profile/profile_id by adding the `profile_filter` or `profile_filter_id` to instance A. The same goes to instance B if syncing bidirectionally.
-    ```ini
-    [radarrA]
-    url = http://127.0.0.1:8080
-    key = XXXXX
-    profile_filter = 1080p
-    ```
-
- 8. Sonarr v3 can specify a `language` or `language_id` (for Docker `SONARR_A/B_LANGUAGE` or `SONARR_A/B_LANGUAGE_ID`) to specify a show's language when copying over a show. When syncing SonarrA to SonarrB:
-    ```ini
     [sonarrB]
     url = http://127.0.0.1:8080
     key = XXXXX
-    language = Vietnamese # when using docker -> SONARR_B_LANGUAGE: Vietnamese
+    profile_id = 1 # Syncarr will try to find id from name but you can specify the id directly if you want
+    language = Vietnamese # can set language for new content added (Sonarr v3 only) (can set by language_id as well)
+    path = /data/4k_Movies
+
+    [general]
+    sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A
+    auto_search = 1 # start search on all new content added
     ```
----
 
-## Notes
-* you cannot have a mix of radarr, lidarr, or sonarr config setups at the same time.
-* for radarr, sonarr, and lidarr, an optional `profile` can be added to instance A so only content with that `profile` will be synced from instance A to instance B. This will be also true if bidirectional syncing is enabled **only** if both `profile`s are supplied. The same behavior can be spplied with `profile_id`s.
-
+    **Note** If `sync_bidirectionally` is set to `1`, then instance A will require either `profile_id` or `profile` AND `path` as well
 
 ---
 ## How to Run
@@ -158,9 +142,12 @@ For just plain docker (radarr example):
 docker run -it --rm --name syncarr -e RADARR_A_URL=https://example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE=1080p -e RADARR_B_PATH=/data/4k_Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
 ```
 
-**Note:** 
-You can also specify the `PROFILE_ID` directly through the `*ARR_A_PROFILE_ID` and `*ARR_B_PROFILE_ID` ENV variables.
+**Notes** 
+* You can also specify the `PROFILE_ID` directly through the `*ARR_A_PROFILE_ID` and `*ARR_B_PROFILE_ID` ENV variables.
 To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILTER_ID` ENV variables. (same for `*arr_B` in bidirectional sync)
+* Language for new content (Sonarr v3 only) can be set by `SONARR_B_LANGUAGE` or `SONARR_B_LANGUAGE_ID` (and `SONARR_B` if bidirectional sync)
+* Set bidirectional sync with `SYNCARR_BIDIRECTIONAL_SYNC=1`
+* Set auto searching on new content with `SYNCARR_AUTO_SEARCH=1`
 
 ---
 ## Requirements

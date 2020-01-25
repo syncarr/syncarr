@@ -13,6 +13,15 @@ VER = '1.5.0'
 
 V3_API_PATH = 'v3/'
 
+########################################################################################################################
+# get docker based ENV vars
+is_in_docker = os.environ.get('IS_IN_DOCKER')
+instance_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
+if instance_sync_interval_seconds:
+    instance_sync_interval_seconds = int(instance_sync_interval_seconds)
+
+########################################################################################################################
+
 def ConfigSectionMap(section):
     '''get all config options from config file'''
     dict1 = {}
@@ -48,13 +57,6 @@ else:
 
 config = configparser.ConfigParser()
 config.read(settingsFilename)
-
-########################################################################################################################
-# get docker based ENV vars
-is_in_docker = os.environ.get('IS_IN_DOCKER')
-instance_sync_interval_seconds = os.environ.get('SYNC_INTERVAL_SECONDS')
-if instance_sync_interval_seconds:
-    instance_sync_interval_seconds = int(instance_sync_interval_seconds)
 
 ########################################################################################################################
 # get config settings from ENV or config files for Radarr
@@ -136,6 +138,10 @@ sync_bidirectionally = get_config_value(
     'SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general') or 0
 if sync_bidirectionally:
     sync_bidirectionally = int(sync_bidirectionally) or 0
+auto_search = get_config_value(
+    'SYNCARR_AUTO_SEARCH', 'auto_search', 'general') or 0
+if auto_search:
+    auto_search = int(auto_search) or 0
 
 
 ########################################################################################################################
@@ -355,7 +361,7 @@ def get_profile_path(instance_url, key):
 logger.debug({
     'instanceA_url': instanceA_url,
     'instanceA_key': instanceA_key,
-    'instanceB_path': instanceB_path,
+    'instanceA_path': instanceA_path,
     'instanceB_url': instanceB_url,
     'instanceB_key': instanceB_key,
     'instanceB_path': instanceB_path,
