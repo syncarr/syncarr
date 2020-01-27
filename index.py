@@ -22,7 +22,7 @@ from config import (
 
     is_in_docker, instance_sync_interval_seconds, 
     sync_bidirectionally, auto_search, monitor_new_content,
-    tested_api_version, api_version, V3_API_PATH, 
+    tested_api_version, api_version, V3_API_PATH,
 )
 
 
@@ -98,8 +98,8 @@ def get_profile_from_id(instance_session, instance_url, instance_key, instance_p
         sys.exit(0)
 
     instance_profile_id = profile.get('id')
-    logger.debug('found profile_id "{}" from profile "{}" for instance {}'.format(
-        instance_profile_id, instance_profile, instance_name))
+    logger.debug(
+        f'found profile_id ({instance_name})" {instance_profile_id}" from profile "{instance_profile}"')
 
     return instance_profile_id
 
@@ -109,8 +109,8 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
     language_response = instance_session.get(instance_language_url)
     if language_response.status_code != 200:
         logger.error(
-            f'Could not get language id from {instance_language_url} - only works on sonarr v3')
-        return None
+            f'Could not get language id from ({instance_name}) {instance_language_url} - only works on sonarr v3')
+        sys.exit(0)
 
     instance_languages = None
     try:
@@ -121,16 +121,20 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
         sys.exit(0)
 
     instance_languages = instance_languages[0]['languages']
-    language = next((item for item in instance_languages if item["name"].lower() == instance_language.lower()), False)
+    language = next((item for item in instance_languages 
+                     if item.get('language', {}).get('name').lower() == instance_language.lower()), False)
 
+    logger.error(language)
     if not language:
-        logger.error('Could not find language_id for instance {} language {}'.format(
-            instance_name, instance_language))
+        logger.error(f'Could not find language_id for instance {instance_name} and language {instance_language}')
         sys.exit(0)
 
-    instance_language_id = language.get('id')
-    logger.debug('found language_id "{}" from language "{}" for instance {}'.format(
-        instance_language_id, instance_language, instance_name))
+    instance_language_id = language.get('language', {}).get('id')
+    logger.debug(f'found id "{instance_language_id}" from language "{instance_language}" for instance {instance_name}')
+    
+    if instance_language_id is None:
+        logger.error(f'language_id is None for instance {instance_name} and language {instance_language}')
+        sys.exit(0)
 
     return instance_language_id
 
@@ -216,11 +220,11 @@ def get_instance_contents(instance_url, instance_key, instance_session, instance
     return instance_contents, instance_contentIds
 
 
-def check_status(instance_session, instance_url, instance_key, instance_name='', checkV3=False):
+def check_status(instance_session, instance_url, instance_key, instance_name='', changed_api_version=False):
     global api_version
-    logger.debug(f'check api_version "{api_version}"')
 
-    instance_status_url = get_status_path(instance_url, instance_key, checkV3)
+    instance_status_url = get_status_path(
+        instance_url, instance_key, changed_api_version)
     error_message = f'Could not connect to instance{instance_name}: {instance_status_url}'
     status_response = None
 
@@ -228,16 +232,18 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
         status_response = instance_session.get(instance_status_url)
 
         # only test again if not lidarr and we haven't tested v3 already
-        if status_response.status_code != 200 and not checkV3 and not is_lidarr:
+        if status_response.status_code != 200 and not changed_api_version and not is_lidarr:
             logger.debug(f'check api_version again')
-            status_response = check_status(instance_session, instance_url, instance_key, instance_name, checkV3=True)
+            status_response = check_status(instance_session, instance_url, instance_key, instance_name, True)
         elif status_response.status_code != 200:
             logger.error(error_message)
             sys.exit(0)
+
     except:
-        if not checkV3 and not is_lidarr:
+        if not changed_api_version and not is_lidarr:
             logger.debug(f'check api_version again exception')
-            status_response = check_status(instance_session, instance_url, instance_key, instance_name, checkV3=True)
+            status_response = check_status(
+                instance_session, instance_url, instance_key, instance_name, True)
 
     if status_response is None:
         logger.error(error_message)
@@ -245,16 +251,18 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
     else:
         try:
             status_response = status_response.json()
-        except:
-            logger.error(f"Could not retrieve status for {instance_status_url}")
-            sys.exit(0)
+        except Exception as error:
+            if not isinstance(status_response, dict):
+                logger.error(
+                    f"Could not retrieve status for {instance_status_url}: {status_response} - {error}")
+                sys.exit(0)
 
         if(status_response.get('error')):
             logger.error(f"{instance_status_url} error {status_response.get('error')}")
             sys.exit(0)
 
         logger.debug(f"{instance_status_url} version {status_response.get('version')}")
-
+    
     return status_response
 
 

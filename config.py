@@ -9,8 +9,11 @@ import configparser
 
 
 DEV = os.environ.get('DEV')
-VER = '1.7.0'
+VER = '1.7.1'
+DEBUG_LINE = '-' * 20
 
+V1_API_PATH = 'v1/'
+V2_API_PATH = ''
 V3_API_PATH = 'v3/'
 
 ########################################################################################################################
@@ -213,7 +216,7 @@ instanceB_language_id = ''
 instanceB_language = ''
 
 
-api_version = 'v1/' # we are going to detect what API version we are on
+api_version = '' # we are going to detect what API version we are on
 tested_api_version = False # only get api version once
 
 
@@ -246,7 +249,7 @@ if radarrA_url and radarrB_url:
     instanceB_profile_filter_id = radarrB_profile_filter_id
     instanceB_path = radarrB_path
 
-    api_version = '' # radarr v2 doesnt have version in api url
+    api_version = V2_API_PATH  # radarr v2 doesnt have version in api url
     api_content_path = 'movie'
     api_search_path = 'command'
     api_profile_path = 'profile'
@@ -272,7 +275,7 @@ elif lidarrA_url and lidarrB_url:
     instanceB_profile_filter_id = lidarrB_profile_filter_id
     instanceB_path = lidarrB_path
 
-    api_version = 'v1/'
+    api_version = V1_API_PATH
     api_content_path = 'artist'
     api_search_path = 'command'
     api_profile_path = 'qualityprofile'
@@ -302,11 +305,10 @@ elif sonarrA_url and sonarrB_url:
     instanceB_language = sonarrB_language
     instanceB_language_id = sonarrB_language_id
 
-
-    api_version = ''
+    api_version = V3_API_PATH  # for sonarr try v3 first
     api_content_path = 'series'
     api_search_path = 'command'
-    api_profile_path = 'profile'
+    api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
     api_language_path = 'languageprofile'
 
@@ -316,23 +318,34 @@ elif sonarrA_url and sonarrB_url:
 ########################################################################################################################
 # path generators
 
-def get_path(instance_url, api_path, key, checkV3=False):
+
+def get_path(instance_url, api_path, key, changed_api_version=False):
     global api_version, api_profile_path
 
-    if not tested_api_version:
-        logger.debug(f'checkV3: "{checkV3}" for {instance_url}')
-
-    if checkV3:
+    if changed_api_version:
         api_version = V3_API_PATH
 
-    if checkV3 and is_sonarr:
-        api_profile_path = 'qualityprofile'
+    # for sonarr - we check v3 first then v2
+    if is_sonarr and changed_api_version:
+        api_version = V2_API_PATH  
+        api_profile_path = 'profile'
+
+    logger.debug(DEBUG_LINE)
+    logger.debug({
+        'instance_url': instance_url,
+        'api_path': api_path,
+        'api_version': api_version,
+        'is_sonarr': is_sonarr,
+        'api_profile_path': api_profile_path,
+        'changed_api_version': changed_api_version,
+    })
 
     url = f"{instance_url}/api/{api_version}{api_path}?apikey={key}"
     return url
 
-def get_status_path(instance_url, key, checkV3):
-    url = get_path(instance_url, api_status_path, key, checkV3)
+
+def get_status_path(instance_url, key, changed_api_version):
+    url = get_path(instance_url, api_status_path, key, changed_api_version)
     logger.debug('get_status_path: {}'.format(url))
     return url
 
@@ -347,9 +360,6 @@ def get_search_path(instance_url, key):
     return url
 
 def get_language_path(instance_url, key):
-    print('-'*20)
-    print(instance_url)
-    print('-'*20)
     url = get_path(instance_url, api_language_path, key)
     logger.debug('get_language_path: {}'.format(url))
     return url
@@ -370,11 +380,13 @@ logger.debug({
     'instanceB_key': instanceB_key,
     'instanceB_path': instanceB_path,
     'api_content_path': api_content_path,
+    'api_profile_path': api_profile_path,
     'api_search_path': api_search_path,
     'api_language_path': api_language_path,
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
     'monitor_new_content': monitor_new_content,
+    'api_version': api_version,
 })
 
 if not instanceA_url:
