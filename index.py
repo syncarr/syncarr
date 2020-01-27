@@ -173,7 +173,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                 if profile_filter_id != content.get('qualityProfileId'): continue
 
             title = content.get('title') or content.get('artistName')
-            logging.info(f'syncing content title "title"')
+            logging.info(f'syncing content title "{title}"')
 
             # get the POST payload and sync content to instance B
             payload = get_new_content_payload(
