@@ -135,13 +135,17 @@ lidarrB_path = get_config_value('LIDARR_B_PATH', 'path', 'lidarrB')
 
 # get general conf options
 sync_bidirectionally = get_config_value(
-    'SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general') or 0
-if sync_bidirectionally:
+    'SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general')
+if sync_bidirectionally is not None:
     sync_bidirectionally = int(sync_bidirectionally)
 auto_search = get_config_value(
-    'SYNCARR_AUTO_SEARCH', 'auto_search', 'general') or 1
-if auto_search:
+    'SYNCARR_AUTO_SEARCH', 'auto_search', 'general')
+if auto_search is not None:
     auto_search = int(auto_search)
+monitor_new_content = get_config_value(
+    'SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', 'general')
+if monitor_new_content is not None:
+    monitor_new_content = int(monitor_new_content)
 
 
 ########################################################################################################################
@@ -370,6 +374,7 @@ logger.debug({
     'api_language_path': api_language_path,
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
+    'monitor_new_content': monitor_new_content,
 })
 
 if not instanceA_url:

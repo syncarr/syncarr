@@ -20,21 +20,27 @@ from config import (
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
     get_status_path, get_content_path, get_search_path, get_profile_path, get_language_path,
 
-    is_in_docker, instance_sync_interval_seconds, sync_bidirectionally, auto_search,
-    tested_api_version, api_version, V3_API_PATH,
+    is_in_docker, instance_sync_interval_seconds, 
+    sync_bidirectionally, auto_search, monitor_new_content,
+    tested_api_version, api_version, V3_API_PATH, 
 )
 
 
 def get_new_content_payload(content, instance_path, instance_profile_id, instance_url, instance_language_id=None):
+    global monitor_new_content
 
     images = content.get('images')
     for image in images:
         image['url'] = '{0}{1}'.format(instance_url, image.get('url'))
 
+    monitored = content.get('monitored')
+    if monitor_new_content is not None:
+        monitored = True if monitor_new_content else False
+
     payload = {
         content_id_key: content.get(content_id_key),
         'qualityProfileId': instance_profile_id or content.get('qualityProfileId'),
-        'monitored': content.get('monitored'),
+        'monitored': monitored,
         'rootFolderPath': instance_path,
         'images': images,
     }

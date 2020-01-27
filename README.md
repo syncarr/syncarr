@@ -66,6 +66,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     [general]
     sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A
     auto_search = 0 # search is automatically started on new content - disable by setting to 0
+    monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced
     ```
 
     **Note** If `sync_bidirectionally` is set to `1`, then instance A will require either `profile_id` or `profile` AND `path` as well
@@ -148,6 +149,7 @@ To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILT
 * Language for new content (Sonarr v3 only) can be set by `SONARR_B_LANGUAGE` or `SONARR_B_LANGUAGE_ID` (and `SONARR_B` if bidirectional sync)
 * Set bidirectional sync with `SYNCARR_BIDIRECTIONAL_SYNC=1`
 * Set disable auto searching on new content with `SYNCARR_AUTO_SEARCH=0`
+* Set if you wanted to monitor new content with `SYNCARR_MONITOR_NEW_CONTENT=1/0`
 
 ---
 ## Requirements
