@@ -9,7 +9,7 @@ import configparser
 
 
 DEV = os.environ.get('DEV')
-VER = '1.6.2'
+VER = '1.7.0'
 
 V3_API_PATH = 'v3/'
 
