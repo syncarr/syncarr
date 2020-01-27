@@ -82,7 +82,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['addOptions'] = {
             **add_options,
             **{
-                "monitor": monitored,
+                "monitored": monitored,
                 "searchForMissingAlbums": search_missing
             }
         }
@@ -188,7 +188,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
             # check response and save content id for searching later on if success
             if sync_response.status_code != 201 and sync_response.status_code != 200:
-                logger.error(f'server sync error for {title} - response {sync_response.status_code}')
+                logger.error(f'server sync error for {title} - response: {sync_response.text}')
             else:
                 try:
                     search_ids.append(int(sync_response.json()['id']))

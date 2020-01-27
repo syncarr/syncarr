@@ -29,6 +29,7 @@ if instance_sync_interval_seconds:
 
 ########################################################################################################################
 
+
 def ConfigSectionMap(section):
     '''get all config options from config file'''
     dict1 = {}
@@ -101,7 +102,8 @@ sonarrA_profile_filter = get_config_value(
 sonarrA_profile_filter_id = get_config_value(
     'SONARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrA')
 sonarrA_language = get_config_value('SONARR_A_LANGUAGE', 'language', 'sonarrA')
-sonarrA_language_id = get_config_value('SONARR_A_LANGUAGE_ID', 'language_id', 'sonarrA')
+sonarrA_language_id = get_config_value(
+    'SONARR_A_LANGUAGE_ID', 'language_id', 'sonarrA')
 
 
 sonarrB_url = get_config_value('SONARR_B_URL', 'url', 'sonarrB')
@@ -115,7 +117,8 @@ sonarrB_profile_filter = get_config_value(
 sonarrB_profile_filter_id = get_config_value(
     'SONARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrB')
 sonarrB_language = get_config_value('SONARR_B_LANGUAGE', 'language', 'sonarrB')
-sonarrB_language_id = get_config_value('SONARR_B_LANGUAGE_ID', 'language_id', 'sonarrB')
+sonarrB_language_id = get_config_value(
+    'SONARR_B_LANGUAGE_ID', 'language_id', 'sonarrB')
 
 # get config settings from ENV or config files for Lidarr
 lidarrA_url = get_config_value('LIDARR_A_URL', 'url', 'lidarrA')
@@ -145,10 +148,15 @@ sync_bidirectionally = get_config_value(
     'SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general')
 if sync_bidirectionally is not None:
     sync_bidirectionally = int(sync_bidirectionally)
+
 auto_search = get_config_value(
     'SYNCARR_AUTO_SEARCH', 'auto_search', 'general')
 if auto_search is not None:
     auto_search = int(auto_search)
+# set to search if config not set
+if auto_search is None:
+    auto_search = 1
+
 monitor_new_content = get_config_value(
     'SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', 'general')
 if monitor_new_content is not None:
@@ -166,7 +174,8 @@ if log_level:
 logger = logging.getLogger()
 logger.setLevel(log_level)
 
-logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+logFormatter = logging.Formatter(
+    "%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
 
 # log to txt file
 fileHandler = logging.FileHandler("./output.txt")
@@ -186,7 +195,7 @@ if DEV:
 ########################################################################################################################
 # make sure we have radarr, lidarr, OR sonarr
 if (
-    (sonarrA_url and radarrA_url) or 
+    (sonarrA_url and radarrA_url) or
     (sonarrA_url and radarrB_url) or
     (sonarrA_url and lidarrA_url) or
     (sonarrA_url and lidarrB_url) or
@@ -196,7 +205,8 @@ if (
     (radarrB_url and lidarrA_url) or
     (radarrB_url and lidarrB_url)
 ):
-    logger.error('cannot have more than one *arr type profile(s) setup at the same time')
+    logger.error(
+        'cannot have more than one *arr type profile(s) setup at the same time')
     sys.exit(0)
 
 ########################################################################################################################
@@ -220,20 +230,20 @@ instanceB_language_id = ''
 instanceB_language = ''
 
 
-api_version = '' # we are going to detect what API version we are on
-tested_api_version = False # only get api version once
+api_version = ''  # we are going to detect what API version we are on
+tested_api_version = False  # only get api version once
 
 
-api_content_path = '' # url path to add content
-api_profile_path = '' # url path to get quality profiles
-api_status_path = '' # url path to check on server status
-api_language_path = '' # url to get lanaguge profiles
+api_content_path = ''  # url path to add content
+api_profile_path = ''  # url path to get quality profiles
+api_status_path = ''  # url path to check on server status
+api_language_path = ''  # url to get lanaguge profiles
 
 is_radarr = False
 is_sonarr = False
 is_lidarr = False
 
-content_id_key = '' # the unique id for a content item
+content_id_key = ''  # the unique id for a content item
 
 if radarrA_url and radarrB_url:
     instanceA_url = radarrA_url
@@ -243,7 +253,7 @@ if radarrA_url and radarrB_url:
     instanceA_profile_filter = radarrA_profile_filter
     instanceA_profile_filter_id = radarrA_profile_filter_id
     instanceA_path = radarrA_path
-    
+
     instanceB_url = radarrB_url
     instanceB_key = radarrB_key
     instanceB_profile = radarrB_profile
@@ -327,7 +337,7 @@ def get_path(instance_url, api_path, key, changed_api_version=False):
 
     # for sonarr - we check v3 first then v2
     if is_sonarr and changed_api_version:
-        api_version = V2_API_PATH  
+        api_version = V2_API_PATH
         api_profile_path = 'profile'
 
     logger.debug(DEBUG_LINE)
@@ -349,15 +359,18 @@ def get_status_path(instance_url, key, changed_api_version):
     logger.debug('get_status_path: {}'.format(url))
     return url
 
+
 def get_content_path(instance_url, key):
     url = get_path(instance_url, api_content_path, key)
     logger.debug('get_content_path: {}'.format(url))
     return url
 
+
 def get_language_path(instance_url, key):
     url = get_path(instance_url, api_language_path, key)
     logger.debug('get_language_path: {}'.format(url))
     return url
+
 
 def get_profile_path(instance_url, key):
     url = get_path(instance_url, api_profile_path, key)
@@ -366,6 +379,7 @@ def get_profile_path(instance_url, key):
 
 ########################################################################################################################
 # check for required fields
+
 
 logger.debug({
     'instanceA_url': instanceA_url,
@@ -380,6 +394,8 @@ logger.debug({
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
     'monitor_new_content': monitor_new_content,
+    'sync_bidirectionally': sync_bidirectionally,
+    'auto_search': auto_search,
     'api_version': api_version,
 })
 
@@ -411,7 +427,8 @@ if not content_id_key:
 if sync_bidirectionally:
     assert instanceA_path
     if not instanceB_profile_id and not instanceB_profile:
-        logger.error('profile_id or profile is required for *arr instance A if sync bidirectionally is enabled')
+        logger.error(
+            'profile_id or profile is required for *arr instance A if sync bidirectionally is enabled')
         sys.exit(0)
 
 
