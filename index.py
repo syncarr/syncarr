@@ -43,6 +43,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['title'] = content.get('title')
         payload['titleSlug'] = content.get('titleSlug')
         payload['seasons'] = content.get('seasons')
+        payload['year'] = content.get('year')
         payload['tvRageId'] = content.get('tvRageId')
         payload['seasonFolder'] = content.get('seasonFolder')
         payload['languageProfileId'] = instance_language_id if instance_language_id is not None else content.get(
@@ -54,6 +55,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
 
     elif is_radarr:
         payload['title'] = content.get('title')
+        payload['year'] = content.get('year')
         payload['tmdbId'] = content.get('tmdbId')
         payload['titleSlug'] = content.get('titleSlug')
 
