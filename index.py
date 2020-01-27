@@ -18,7 +18,7 @@ from config import (
     instanceB_language_id, instanceB_language,
 
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
-    get_status_path, get_content_path, get_search_path, get_profile_path, get_language_path,
+    get_status_path, get_content_path, get_profile_path, get_language_path,
 
     is_in_docker, instance_sync_interval_seconds, 
     sync_bidirectionally, auto_search, monitor_new_content,
@@ -27,7 +27,7 @@ from config import (
 
 
 def get_new_content_payload(content, instance_path, instance_profile_id, instance_url, instance_language_id=None):
-    global monitor_new_content
+    global monitor_new_content, auto_search
 
     images = content.get('images')
     for image in images:
@@ -45,6 +45,9 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         'images': images,
     }
 
+    add_options = content.get('addOptions', {})
+    search_missing = True if auto_search else False
+
     if is_sonarr:
         payload['title'] = content.get('title')
         payload['titleSlug'] = content.get('titleSlug')
@@ -57,19 +60,32 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['tags'] = content.get('tags')
         payload['seriesType'] = content.get('seriesType')
         payload['useSceneNumbering'] = content.get('useSceneNumbering')
-        payload['addOptions'] = content.get('addOptions')
+        payload['addOptions'] = {
+            **add_options,
+            **{'searchForMissingEpisodes': search_missing}
+        }
 
     elif is_radarr:
         payload['title'] = content.get('title')
         payload['year'] = content.get('year')
         payload['tmdbId'] = content.get('tmdbId')
         payload['titleSlug'] = content.get('titleSlug')
+        payload['addOptions'] = { 
+            **add_options, 
+            **{'searchForMovie': search_missing}
+        }
 
     elif is_lidarr:
         payload['artistName'] = content.get('artistName')
-        payload['addOptions'] = content.get('addOptions', {})
         payload['albumFolder'] = content.get('albumFolder')
         payload['metadataProfileId'] = content.get('metadataProfileId')
+        payload['addOptions'] = {
+            **add_options,
+            **{
+                "monitor": monitored,
+                "searchForMissingAlbums": search_missing
+            }
+        }
 
     logger.debug(payload)
     return payload
@@ -139,19 +155,9 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
     return instance_language_id
 
 
-def search_synced(search_ids, instance_search_url, instance_session):
-    # now that we've synced all contents search for the newly synced contents
-    instance_search_url = get_search_path(instanceA_url, instanceA_key)
-
-    if len(search_ids):
-        payload = { 'name': 'contentsSearch', 'contentIds': search_ids }
-        instance_session.post(instance_search_url, data=json.dumps(payload))
-
-
 def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
                  instanceB_path, instanceB_profile_id, instanceB_session, 
                  instanceB_url, profile_filter_id, instanceB_key):
-    global auto_search
     search_ids = []
 
     # if given instance A profile id then we want to filter out content without that id
@@ -167,7 +173,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                 if profile_filter_id != content.get('qualityProfileId'): continue
 
             title = content.get('title') or content.get('artistName')
-            logging.info('syncing content title "{0}"'.format(title))
+            logging.info(f'syncing content title "title"')
 
             # get the POST payload and sync content to instance B
             payload = get_new_content_payload(
@@ -180,9 +186,9 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
             instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
             sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
-            # check respons and save content id for searching later on if success
+            # check response and save content id for searching later on if success
             if sync_response.status_code != 201 and sync_response.status_code != 200:
-                logger.error('server sync error for {} - response {}'.format(title, sync_response.status_code))
+                logger.error(f'server sync error for {title} - response {sync_response.status_code}')
             else:
                 try:
                     search_ids.append(int(sync_response.json()['id']))
@@ -190,11 +196,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     logger.error(f'Could not decode sync response from {instanceB_content_url}')
                 logging.info('content title "{0}" synced successfully'.format(title))
     
-    logging.info('{0} contents synced successfully'.format(len(search_ids)))
-    instanceB_search_url = get_search_path(instanceB_url, instanceB_key)
-
-    if auto_search:
-        search_synced(search_ids, instanceB_search_url, instanceB_session)
+    logging.info(f'{len(search_ids)} contents synced successfully')
 
 
 def get_instance_contents(instance_url, instance_key, instance_session, instance_name=''):
