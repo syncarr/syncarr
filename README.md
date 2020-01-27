@@ -171,3 +171,9 @@ Or in docker, set the `LOG_LEVEL` ENV variable. Default is set to `20` (info onl
 ---
 ## Disclaimer
 Back up your instances before trying this out. I am not responsible for any lost data.
+
+---
+
+Enjoy my card? Help me out for a couple of :beers: or a :coffee:!
+
+[![coffee](https://www.buymeacoffee.com/assets/img/custom_images/black_img.png)](https://www.buymeacoffee.com/JMISm06AD)
