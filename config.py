@@ -9,12 +9,16 @@ import configparser
 
 
 DEV = os.environ.get('DEV')
-VER = '1.7.1'
+VER = '1.7.2'
 DEBUG_LINE = '-' * 20
 
 V1_API_PATH = 'v1/'
 V2_API_PATH = ''
 V3_API_PATH = 'v3/'
+
+# https://github.com/lidarr/Lidarr/wiki/Artist
+# https://github.com/Radarr/Radarr/wiki/API:Movie
+# https://github.com/Sonarr/Sonarr/wiki/Series
 
 ########################################################################################################################
 # get docker based ENV vars
@@ -221,7 +225,6 @@ tested_api_version = False # only get api version once
 
 
 api_content_path = '' # url path to add content
-api_search_path = '' # url path to search for content on RSS feeds
 api_profile_path = '' # url path to get quality profiles
 api_status_path = '' # url path to check on server status
 api_language_path = '' # url to get lanaguge profiles
@@ -251,7 +254,6 @@ if radarrA_url and radarrB_url:
 
     api_version = V2_API_PATH  # radarr v2 doesnt have version in api url
     api_content_path = 'movie'
-    api_search_path = 'command'
     api_profile_path = 'profile'
     api_status_path = 'system/status'
 
@@ -277,7 +279,6 @@ elif lidarrA_url and lidarrB_url:
 
     api_version = V1_API_PATH
     api_content_path = 'artist'
-    api_search_path = 'command'
     api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
 
@@ -307,7 +308,6 @@ elif sonarrA_url and sonarrB_url:
 
     api_version = V3_API_PATH  # for sonarr try v3 first
     api_content_path = 'series'
-    api_search_path = 'command'
     api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
     api_language_path = 'languageprofile'
@@ -354,11 +354,6 @@ def get_content_path(instance_url, key):
     logger.debug('get_content_path: {}'.format(url))
     return url
 
-def get_search_path(instance_url, key):
-    url = get_path(instance_url, api_search_path, key)
-    logger.debug('get_search_path: {}'.format(url))
-    return url
-
 def get_language_path(instance_url, key):
     url = get_path(instance_url, api_language_path, key)
     logger.debug('get_language_path: {}'.format(url))
@@ -381,7 +376,6 @@ logger.debug({
     'instanceB_path': instanceB_path,
     'api_content_path': api_content_path,
     'api_profile_path': api_profile_path,
-    'api_search_path': api_search_path,
     'api_language_path': api_language_path,
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
@@ -407,10 +401,6 @@ if not instanceB_key:
 
 if not api_content_path:
     logger.error('missing api_content_path')
-    sys.exit(0)
-
-if not api_search_path:
-    logger.error('missing api_search_path')
     sys.exit(0)
 
 if not content_id_key:
