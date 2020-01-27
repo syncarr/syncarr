@@ -33,7 +33,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
 
     payload = {
         content_id_key: content.get(content_id_key),
-        'qualityProfileId': content.get('qualityProfileId'),
+        'qualityProfileId': instance_profile_id or content.get('qualityProfileId'),
         'monitored': content.get('monitored'),
         'rootFolderPath': instance_path,
         'images': images,
