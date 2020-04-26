@@ -9,7 +9,7 @@ import configparser
 
 
 DEV = os.environ.get('DEV')
-VER = '1.7.6'
+VER = '1.7.7'
 DEBUG_LINE = '-' * 20
 
 V1_API_PATH = 'v1/'
@@ -150,6 +150,9 @@ sync_bidirectionally = get_config_value(
     'SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general')
 if sync_bidirectionally is not None:
     sync_bidirectionally = int(sync_bidirectionally)
+# set to search if config not set
+if sync_bidirectionally is None:
+    sync_bidirectionally = 0
 
 auto_search = get_config_value(
     'SYNCARR_AUTO_SEARCH', 'auto_search', 'general')
@@ -163,7 +166,9 @@ monitor_new_content = get_config_value(
     'SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', 'general')
 if monitor_new_content is not None:
     monitor_new_content = int(monitor_new_content)
-
+# set to monitor if config not set
+if monitor_new_content is None:
+    monitor_new_content = 1
 
 ########################################################################################################################
 # setup logger
