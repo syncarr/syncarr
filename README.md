@@ -158,7 +158,7 @@ To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILT
 * Language for new content (Sonarr v3 only) can be set by `SONARR_B_LANGUAGE` or `SONARR_B_LANGUAGE_ID` (and `SONARR_B` if bidirectional sync)
 * Set bidirectional sync with `SYNCARR_BIDIRECTIONAL_SYNC=1` (default 0)
 * Set disable auto searching on new content with `SYNCARR_AUTO_SEARCH=0`  (default 1)
-* Set if you want to monitor new content with `SYNCARR_MONITOR_NEW_CONTENT=1/0`  (default 1)
+* Set if you want to NOT monitor new content with `SYNCARR_MONITOR_NEW_CONTENT=0`  (default 1)
 
 ---
 ## Troubleshooting
