@@ -9,7 +9,7 @@ import configparser
 
 
 DEV = os.environ.get('DEV')
-VER = '1.7.7'
+VER = '1.7.8'
 DEBUG_LINE = '-' * 20
 
 V1_API_PATH = 'v1/'
