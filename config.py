@@ -9,7 +9,7 @@ import configparser
 
 
 DEV = os.environ.get('DEV')
-VER = '1.7.8'
+VER = '1.8.0'
 DEBUG_LINE = '-' * 20
 
 V1_API_PATH = 'v1/'
@@ -72,21 +72,25 @@ config.read(settingsFilename)
 # get config settings from ENV or config files for Radarr
 radarrA_url = get_config_value('RADARR_A_URL', 'url', 'radarrA')
 radarrA_key = get_config_value('RADARR_A_KEY', 'key', 'radarrA')
+radarrA_path = get_config_value('RADARR_A_PATH', 'path', 'radarrA')
 radarrA_profile = get_config_value('RADARR_A_PROFILE', 'profile', 'radarrA')
 radarrA_profile_id = get_config_value('RADARR_A_PROFILE_ID', 'profile_id', 'radarrA')
 radarrA_profile_filter = get_config_value('RADARR_A_PROFILE_FILTER', 'profile_filter', 'radarrA')
-radarrA_quality_match = get_config_value('SONARR_A_QUALITY_MATCH', 'quality_match', 'sonarrA')
 radarrA_profile_filter_id = get_config_value('RADARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'radarrA')
-radarrA_path = get_config_value('RADARR_A_PATH', 'path', 'radarrA')
+radarrA_language = get_config_value('RADARR_A_LANGUAGE', 'language', 'radarrA')
+radarrA_language_id = get_config_value('RADARR_A_LANGUAGE_ID', 'language_id', 'radarrA')
+radarrA_quality_match = get_config_value('RADARR_A_QUALITY_MATCH', 'quality_match', 'radarrA')
 
 radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB')
 radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB')
+radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB')
 radarrB_profile = get_config_value('RADARR_B_PROFILE', 'profile', 'radarrB')
 radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB')
 radarrB_profile_filter = get_config_value('RADARR_B_PROFILE_FILTER', 'profile_filter', 'radarrB')
 radarrB_profile_filter_id = get_config_value('RADARR_B_PROFILE_FILTER_ID', 'profile_filter_id', 'radarrB')
+radarrB_language = get_config_value('RADARR_B_LANGUAGE', 'language', 'radarrB')
+radarrB_language_id = get_config_value('RADARR_B_LANGUAGE_ID', 'language_id', 'radarrB')
 radarrB_quality_match = get_config_value('RADARR_B_QUALITY_MATCH', 'quality_match', 'radarrB')
-radarrB_path = get_config_value('RADARR_B_PATH', 'path', 'radarrB')
 
 # get config settings from ENV or config files for Sonarr
 sonarrA_url = get_config_value('SONARR_A_URL', 'url', 'sonarrA')
@@ -96,10 +100,9 @@ sonarrA_profile = get_config_value('SONARR_A_PROFILE', 'profile', 'sonarrA')
 sonarrA_profile_id = get_config_value('SONARR_A_PROFILE_ID', 'profile_id', 'sonarrA')
 sonarrA_profile_filter = get_config_value('SONARR_A_PROFILE_FILTER', 'profile_filter', 'sonarrA')
 sonarrA_profile_filter_id = get_config_value('SONARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrA')
-sonarrA_quality_match = get_config_value('SONARR_A_QUALITY_MATCH', 'quality_match', 'sonarrA')
 sonarrA_language = get_config_value('SONARR_A_LANGUAGE', 'language', 'sonarrA')
 sonarrA_language_id = get_config_value('SONARR_A_LANGUAGE_ID', 'language_id', 'sonarrA')
-
+sonarrA_quality_match = get_config_value('SONARR_A_QUALITY_MATCH', 'quality_match', 'sonarrA')
 
 sonarrB_url = get_config_value('SONARR_B_URL', 'url', 'sonarrB')
 sonarrB_key = get_config_value('SONARR_B_KEY', 'key', 'sonarrB')
@@ -108,28 +111,32 @@ sonarrB_profile = get_config_value('SONARR_B_PROFILE', 'profile', 'sonarrB')
 sonarrB_profile_id = get_config_value('SONARR_B_PROFILE_ID', 'profile_id', 'sonarrB')
 sonarrB_profile_filter = get_config_value('SONARR_B_PROFILE_FILTER', 'profile_filter', 'sonarrB')
 sonarrB_profile_filter_id = get_config_value('SONARR_B_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrB')
-sonarrB_quality_match = get_config_value('SONARR_B_QUALITY_MATCH', 'quality_match', 'sonarrB')
 sonarrB_language = get_config_value('SONARR_B_LANGUAGE', 'language', 'sonarrB')
 sonarrB_language_id = get_config_value('SONARR_B_LANGUAGE_ID', 'language_id', 'sonarrB')
+sonarrB_quality_match = get_config_value('SONARR_B_QUALITY_MATCH', 'quality_match', 'sonarrB')
 
 # get config settings from ENV or config files for Lidarr
 lidarrA_url = get_config_value('LIDARR_A_URL', 'url', 'lidarrA')
 lidarrA_key = get_config_value('LIDARR_A_KEY', 'key', 'lidarrA')
+lidarrA_path = get_config_value('LIDARR_A_PATH', 'path', 'lidarrA')
 lidarrA_profile = get_config_value('LIDARR_A_PROFILE', 'profile', 'lidarrA')
 lidarrA_profile_id = get_config_value('LIDARR_A_PROFILE_ID', 'profile_id', 'lidarrA')
 lidarrA_profile_filter = get_config_value('LIDARR_A_PROFILE_FILTER', 'profile_filter', 'lidarrA')
 lidarrA_profile_filter_id = get_config_value('LIDARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'lidarrA')
+lidarrA_language = get_config_value('LIDARR_A_LANGUAGE', 'language', 'lidarrA')
+lidarrA_language_id = get_config_value('LIDARR_A_LANGUAGE_ID', 'language_id', 'lidarrA')
 lidarrA_quality_match = get_config_value('LIDARR_A_QUALITY_MATCH', 'quality_match', 'lidarrA')
-lidarrA_path = get_config_value('LIDARR_A_PATH', 'path', 'lidarrA')
 
 lidarrB_url = get_config_value('LIDARR_B_URL', 'url', 'lidarrB')
 lidarrB_key = get_config_value('LIDARR_B_KEY', 'key', 'lidarrB')
+lidarrB_path = get_config_value('LIDARR_B_PATH', 'path', 'lidarrB')
 lidarrB_profile = get_config_value('LIDARR_B_PROFILE', 'profile', 'lidarrB')
 lidarrB_profile_id = get_config_value('LIDARR_B_PROFILE_ID', 'profile_id', 'lidarrB')
 lidarrB_profile_filter = get_config_value('LIDARR_B_PROFILE_FILTER', 'profile_filter', 'lidarrB')
 lidarrB_profile_filter_id = get_config_value('LIDARR_B_PROFILE_FILTER_ID', 'profile_filter_id', 'lidarrB')
+lidarrB_language = get_config_value('LIDARR_B_LANGUAGE', 'language', 'lidarrB')
+lidarrB_language_id = get_config_value('LIDARR_B_LANGUAGE_ID', 'language_id', 'lidarrB')
 lidarrB_quality_match = get_config_value('LIDARR_B_QUALITY_MATCH', 'quality_match', 'lidarrB')
-lidarrB_path = get_config_value('LIDARR_B_PATH', 'path', 'lidarrB')
 
 
 # set to search if config not set
@@ -155,7 +162,10 @@ else:
 # set to monitor if config not set
 monitor_new_content = get_config_value('SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', 'general')
 if monitor_new_content is not None:
-    monitor_new_content = int(monitor_new_content)
+    try:
+        monitor_new_content = int(monitor_new_content)
+    except ValueError:
+        monitor_new_content = 1
 else:
     monitor_new_content = 1
 
@@ -214,8 +224,9 @@ instanceA_path = ''
 instanceA_profile = ''
 instanceA_profile_id = ''
 instanceA_profile_filter = ''
-instanceA_language_id = ''
+instanceA_profile_filter_id = ''
 instanceA_language = ''
+instanceA_language_id = ''
 instanceA_quality_match = ''
 
 instanceB_url = ''
@@ -224,8 +235,9 @@ instanceB_path = ''
 instanceB_profile = ''
 instanceB_profile_id = ''
 instanceB_profile_filter = ''
-instanceB_language_id = ''
+instanceB_profile_filter_id = ''
 instanceB_language = ''
+instanceB_language_id = ''
 instanceB_quality_match = ''
 
 
@@ -247,19 +259,25 @@ content_id_key = ''  # the unique id for a content item
 if radarrA_url and radarrB_url:
     instanceA_url = radarrA_url
     instanceA_key = radarrA_key
+    instanceA_path = radarrA_path
     instanceA_profile = radarrA_profile
     instanceA_profile_id = radarrA_profile_id
     instanceA_profile_filter = radarrA_profile_filter
     instanceA_profile_filter_id = radarrA_profile_filter_id
-    instanceA_path = radarrA_path
+    instanceA_language = radarrA_language
+    instanceA_language_id = radarrA_language_id
+    instanceA_quality_match = radarrA_quality_match
 
     instanceB_url = radarrB_url
     instanceB_key = radarrB_key
+    instanceB_path = radarrB_path
     instanceB_profile = radarrB_profile
     instanceB_profile_id = radarrB_profile_id
     instanceB_profile_filter = radarrB_profile_filter
     instanceB_profile_filter_id = radarrB_profile_filter_id
-    instanceB_path = radarrB_path
+    instanceB_language = radarrB_language
+    instanceB_language_id = radarrB_language_id
+    instanceB_quality_match = radarrB_quality_match
 
     api_version = V2_API_PATH  # radarr v2 doesnt have version in api url
     api_content_path = 'movie'
@@ -272,19 +290,25 @@ if radarrA_url and radarrB_url:
 elif lidarrA_url and lidarrB_url:
     instanceA_url = lidarrA_url
     instanceA_key = lidarrA_key
+    instanceA_path = lidarrA_path
     instanceA_profile = lidarrA_profile
     instanceA_profile_id = lidarrA_profile_id
     instanceA_profile_filter = lidarrA_profile_filter
     instanceA_profile_filter_id = lidarrA_profile_filter_id
-    instanceA_path = lidarrA_path
+    instanceA_language = lidarrA_language
+    instanceA_language_id = lidarrA_language_id
+    instanceA_quality_match = lidarrA_quality_match
 
     instanceB_url = lidarrB_url
     instanceB_key = lidarrB_key
+    instanceB_path = lidarrB_path
     instanceB_profile = lidarrB_profile
     instanceB_profile_id = lidarrB_profile_id
     instanceB_profile_filter = lidarrB_profile_filter
     instanceB_profile_filter_id = lidarrB_profile_filter_id
-    instanceB_path = lidarrB_path
+    instanceB_language = lidarrB_language
+    instanceB_language_id = lidarrB_language_id
+    instanceB_quality_match = lidarrB_quality_match
 
     api_version = V1_API_PATH
     api_content_path = 'artist'
@@ -304,6 +328,7 @@ elif sonarrA_url and sonarrB_url:
     instanceA_profile_filter_id = sonarrA_profile_filter_id
     instanceA_language = sonarrA_language
     instanceA_language_id = sonarrA_language_id
+    instanceA_quality_match = sonarrA_quality_match
 
     instanceB_url = sonarrB_url
     instanceB_key = sonarrB_key
@@ -314,6 +339,7 @@ elif sonarrA_url and sonarrB_url:
     instanceB_profile_filter_id = sonarrB_profile_filter_id
     instanceB_language = sonarrB_language
     instanceB_language_id = sonarrB_language_id
+    instanceB_quality_match = sonarrB_quality_match
 
     api_version = V3_API_PATH  # for sonarr try v3 first
     api_content_path = 'series'
@@ -384,14 +410,32 @@ logger.debug({
     'instanceA_url': instanceA_url,
     'instanceA_key': instanceA_key,
     'instanceA_path': instanceA_path,
+    'instanceA_profile': instanceA_profile,
+    'instanceA_profile_id': instanceA_profile_id,
+    'instanceA_profile_filter': instanceA_profile_filter,
+    'instanceA_profile_filter_id': instanceA_profile_filter_id,
+    'instanceA_language': instanceA_language,
+    'instanceA_language_id': instanceA_language_id,
+    'instanceA_quality_match': instanceA_quality_match,
+
     'instanceB_url': instanceB_url,
     'instanceB_key': instanceB_key,
     'instanceB_path': instanceB_path,
+    'instanceB_profile': instanceB_profile,
+    'instanceB_profile_id': instanceB_profile_id,
+    'instanceB_profile_filter': instanceB_profile_filter,
+    'instanceB_profile_filter_id': instanceB_profile_filter_id,
+    'instanceB_language': instanceB_language,
+    'instanceB_language_id': instanceB_language_id,
+    'instanceB_quality_match': instanceB_quality_match,
+
     'api_content_path': api_content_path,
     'api_profile_path': api_profile_path,
     'api_language_path': api_language_path,
+
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
+
     'monitor_new_content': monitor_new_content,
     'sync_bidirectionally': sync_bidirectionally,
     'auto_search': auto_search,
@@ -428,7 +472,6 @@ if sync_bidirectionally:
     if not instanceB_profile_id and not instanceB_profile:
         logger.error('profile_id or profile is required for *arr instance A if sync bidirectionally is enabled')
         sys.exit(0)
-
 
 if not instanceB_profile_id and not instanceB_profile:
     logger.error('profile_id or profile is required for *arr instance B')

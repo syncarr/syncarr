@@ -57,6 +57,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
+    quality_match = HD- # regex match to only sync content in instance A that matches this quality profile (example will match HD-720p and HD-1080p profiles but not HD4k)
 
     [sonarrB]
     url = http://127.0.0.1:8080
@@ -159,7 +160,8 @@ To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILT
 * Set bidirectional sync with `SYNCARR_BIDIRECTIONAL_SYNC=1` (default 0)
 * Set disable auto searching on new content with `SYNCARR_AUTO_SEARCH=0`  (default 1)
 * Set if you want to NOT monitor new content with `SYNCARR_MONITOR_NEW_CONTENT=0`  (default 1)
-
+* Match regex quality profiles with `*ARR_A_QUALITY_MATCH` or `*ARR_B_QUALITY_MATCH`
+  
 ---
 ## Troubleshooting
 If you need to troubleshoot syncarr, then you can either set the log level through the config file:

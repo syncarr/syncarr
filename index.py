@@ -7,15 +7,16 @@ import json
 import configparser
 import sys
 import time
+import re
 
 from config import (
     instanceA_url, instanceA_key,  instanceA_path, instanceA_profile,
     instanceA_profile_id, instanceA_profile_filter, instanceA_profile_filter_id,
-    instanceA_language_id, instanceA_language,
+    instanceA_language_id, instanceA_language, instanceA_quality_match,
 
     instanceB_url, instanceB_key, instanceB_path, instanceB_profile,
     instanceB_profile_id, instanceB_profile_filter, instanceB_profile_filter_id,
-    instanceB_language_id, instanceB_language,
+    instanceB_language_id, instanceB_language, instanceB_quality_match,
 
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
     get_status_path, get_content_path, get_profile_path, get_language_path,
@@ -90,32 +91,31 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
     logger.debug(payload)
     return payload
 
-
-def get_profile_from_id(instance_session, instance_url, instance_key, instance_profile, instance_name=''):
+def get_quality_profiles(instance_session, instance_url, instance_key):
     instance_profile_url = get_profile_path(instance_url, instance_key)
     profiles_response = instance_session.get(instance_profile_url)
     if profiles_response.status_code != 200:
-        logger.error(
-            f'Could not get profile id from {instance_profile_url}')
+        logger.error(f'Could not get profile id from {instance_profile_url}')
         sys.exit(0)
 
     instance_profiles = None
     try:
         instance_profiles = profiles_response.json()
+        return instance_profiles
     except:
-        logger.error(
-            f'Could not decode profile id from {instance_profile_url}')
+        logger.error(f'Could not decode profile id from {instance_profile_url}')
         sys.exit(0)
+
+def get_profile_from_id(instance_session, instance_url, instance_key, instance_profile, instance_name=''):
+    instance_profiles = get_quality_profiles(instance_session=instance_session, instance_url=instance_url, instance_key=instance_key)
 
     profile = next((item for item in instance_profiles if item["name"].lower() == instance_profile.lower()), False)
     if not profile:
-        logger.error('Could not find profile_id for instance {} profile {}'.format(
-            instance_name, instance_profile))
+        logger.error('Could not find profile_id for instance {} profile {}'.format(instance_name, instance_profile))
         sys.exit(0)
 
     instance_profile_id = profile.get('id')
-    logger.debug(
-        f'found profile_id (instance{instance_name}) "{instance_profile_id}" from profile "{instance_profile}"')
+    logger.debug(f'found profile_id (instance{instance_name}) "{instance_profile_id}" from profile "{instance_profile}"')
 
     return instance_profile_id
 
@@ -156,13 +156,24 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
 
 
 def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
-                 instanceB_path, instanceB_profile_id, instanceB_session, 
-                 instanceB_url, profile_filter_id, instanceB_key):
+                 instanceB_path, instanceB_profile_id, instanceA_profile_filter_id,
+                 instanceA_session, instanceA_url, instanceA_key,
+                 instanceB_session, instanceB_url, instanceB_key, instanceA_quality_match):
     search_ids = []
 
     # if given instance A profile id then we want to filter out content without that id
-    if profile_filter_id:
-        logging.info(f'only filtering content with profile_filter_id {profile_filter_id}')
+    if instanceA_profile_filter_id:
+        logging.info(f'only filtering content with instanceA_profile_filter_id {instanceA_profile_filter_id}')
+
+    # if we watn to filter by quality profile we need to get all profiles first
+    instance_profiles = None
+    if instanceA_quality_match:
+        instance_profiles = get_quality_profiles(instance_session=instanceA_session, instance_url=instanceA_url, instance_key=instanceA_key)
+        quality_profile_matches = [item for item in instance_profiles if re.match(instanceA_quality_match, item["name"])]
+        quality_profile_match_ids = [item["id"] for item in quality_profile_matches]
+        _quality_profile_matches = [f'{str(item["id"])} ({item["name"]})' for item in quality_profile_matches]
+        _debug_matches = ', '.join(_quality_profile_matches)
+        logging.debug(f'Matching regex quality profiles {_debug_matches}')
 
     # for each content id in instance A, check if it needs to be synced to instance B
     for content in instanceA_contents:
@@ -170,12 +181,19 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
             title = content.get('title') or content.get('artistName')
 
             # if given this, we want to filter from instance by profile id
-            if profile_filter_id:
-                content_profile_id = content.get('qualityProfileId')
-                if profile_filter_id != content_profile_id:
-                    logging.debug(f'Skipping content {title} - mismatched profile_id {content_profile_id} with filter_id {profile_filter_id}')
+            if instanceA_profile_filter_id:
+                quality_profile_id = content.get('qualityProfileId')
+                if instanceA_profile_filter_id != quality_profile_id:
+                    logging.debug(f'Skipping content {title} - mismatched quality_profile_id {quality_profile_id} with instanceA_profile_filter_id {instanceA_profile_filter_id}')
                     continue
-
+            
+            # if given quality filter we want to filter if quality from instanceA isnt high enough yet
+            if instanceA_quality_match and instance_profiles:
+                quality_profile_id = content.get('qualityProfileId')
+                if quality_profile_id not in quality_profile_match_ids:
+                    logging.debug(f'Skipping content {title} - mismatched quality_profile_id {quality_profile_id} with instanceA_quality_match {instanceA_quality_match}')
+                    continue
+                
             logging.info(f'syncing content title "{title}"')
 
             # get the POST payload and sync content to instance B
@@ -272,7 +290,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
 
 
 def sync_content():
-    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language
+    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language, instanceA_quality_match, instanceB_quality_match
 
     # get sessions
     instanceA_session = requests.Session()
@@ -356,8 +374,12 @@ def sync_content():
         instanceB_profile_id=instanceB_profile_id, 
         instanceB_session=instanceB_session, 
         instanceB_url=instanceB_url, 
-        profile_filter_id=instanceA_profile_filter_id,
+        instanceA_profile_filter_id=instanceA_profile_filter_id,
         instanceB_key=instanceB_key,
+        instanceA_quality_match=instanceA_quality_match,
+        instanceA_session=instanceA_session,
+        instanceA_url=instanceA_url,
+        instanceA_key=instanceA_key,
     )
 
     # if given bidirectional flag then sync from instance B to instance A
@@ -372,8 +394,12 @@ def sync_content():
             instanceB_profile_id=instanceA_profile_id, 
             instanceB_session=instanceA_session, 
             instanceB_url=instanceA_url, 
-            profile_filter_id=instanceB_profile_filter_id,
+            instanceA_profile_filter_id=instanceB_profile_filter_id,
             instanceB_key=instanceA_key,
+            instanceA_quality_match=instanceB_quality_match,
+            instanceA_session=instanceB_session,
+            instanceA_url=instanceB_url,
+            instanceA_key=instanceB_key,
         )
 
 ########################################################################################################################
