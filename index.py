@@ -157,23 +157,13 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
 
 def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
                  instanceB_path, instanceB_profile_id, instanceA_profile_filter_id,
-                 instanceA_session, instanceA_url, instanceA_key,
                  instanceB_session, instanceB_url, instanceB_key, instanceA_quality_match):
+    global is_radarr
     search_ids = []
 
     # if given instance A profile id then we want to filter out content without that id
     if instanceA_profile_filter_id:
         logging.info(f'only filtering content with instanceA_profile_filter_id {instanceA_profile_filter_id}')
-
-    # if we watn to filter by quality profile we need to get all profiles first
-    instance_profiles = None
-    if instanceA_quality_match:
-        instance_profiles = get_quality_profiles(instance_session=instanceA_session, instance_url=instanceA_url, instance_key=instanceA_key)
-        quality_profile_matches = [item for item in instance_profiles if re.match(instanceA_quality_match, item["name"])]
-        quality_profile_match_ids = [item["id"] for item in quality_profile_matches]
-        _quality_profile_matches = [f'{str(item["id"])} ({item["name"]})' for item in quality_profile_matches]
-        _debug_matches = ', '.join(_quality_profile_matches)
-        logging.debug(f'Matching regex quality profiles {_debug_matches}')
 
     # for each content id in instance A, check if it needs to be synced to instance B
     for content in instanceA_contents:
@@ -188,12 +178,12 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     continue
             
             # if given quality filter we want to filter if quality from instanceA isnt high enough yet
-            if instanceA_quality_match and instance_profiles:
-                quality_profile_id = content.get('qualityProfileId')
-                if quality_profile_id not in quality_profile_match_ids:
-                    logging.debug(f'Skipping content {title} - mismatched quality_profile_id {quality_profile_id} with instanceA_quality_match {instanceA_quality_match}')
+            if is_radarr and instanceA_quality_match:
+                content_quality = content.get('movieFile', {}).get('quality', {}).get('quality', {}).get('name', '')
+                if content_quality and not re.match(instanceA_quality_match, content_quality):
+                    logging.debug(f'Skipping content {title} - mismatched content_quality {content_quality} with instanceA_quality_match {instanceA_quality_match}')
                     continue
-                
+
             logging.info(f'syncing content title "{title}"')
 
             # get the POST payload and sync content to instance B
@@ -377,9 +367,6 @@ def sync_content():
         instanceA_profile_filter_id=instanceA_profile_filter_id,
         instanceB_key=instanceB_key,
         instanceA_quality_match=instanceA_quality_match,
-        instanceA_session=instanceA_session,
-        instanceA_url=instanceA_url,
-        instanceA_key=instanceA_key,
     )
 
     # if given bidirectional flag then sync from instance B to instance A
@@ -397,9 +384,6 @@ def sync_content():
             instanceA_profile_filter_id=instanceB_profile_filter_id,
             instanceB_key=instanceA_key,
             instanceA_quality_match=instanceB_quality_match,
-            instanceA_session=instanceB_session,
-            instanceA_url=instanceB_url,
-            instanceA_key=instanceB_key,
         )
 
 ########################################################################################################################
