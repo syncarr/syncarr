@@ -1,5 +1,5 @@
 # Syncarr
-Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a 4k radarr/sonarr instance to a 1080p radarr/sonarr instance.
+Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a 4k Radarr/Sonarr instance to a 1080p Radarr/Sonarr instance.
 
 * Supports Radarr/Sonarr version 2 and 3.
 * Can sync by `profile` name or `profile_id`
@@ -8,11 +8,12 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Can set interval for syncing
 * Support two way sync (one way by default)
 * Set language profiles (Sonarr v3 only)
+* Filter syncing by content file quality (Radarr only)
 
 
 ## Configuration
  1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
- 2. Add the profile name (case insensitive) and movie path for the radarr instance the movies will be synced to:
+ 2. Add the profile name (case insensitive) and movie path for the Radarr instance the movies will be synced to:
     ```ini
     [radarrA]
     url = https://4k.example.com:443
@@ -24,7 +25,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     profile = 1080p
     path = /data/Movies
     ```
- 3. Or if you want to sync two sonarr instances:
+ 3. Or if you want to sync two Sonarr instances:
     ```ini
     [sonarrA]
     url = https://4k.example.com:443
@@ -36,7 +37,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     profile = 1080p
     path = /data/Shows
  
- 4. Or if you want to sync two lidarr instances:
+ 4. Or if you want to sync two Lidarr instances:
     ```ini
     [lidarrA]
     url = https://lossless.example.com:443
@@ -49,17 +50,19 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     path = /data/Music
     ```
     
-    **Note** you cannot have a mix of radarr, lidarr, or sonarr config setups at the same time.
+    **Note** you cannot have a mix of Radarr, Lidarr, or Sonarr config setups at the same time.
 
  5. Optional Configuration
     ```ini
-    [sonarrA]
+    [*arrA]
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
-    quality_match = HD- # (radarr only) regex match to only sync content that matches the set quality (ie if set to 1080p then only movies with matching downloaded quality of 1080p will be synced)
+    quality_match = HD- # (Radarr only) regex match to only sync content that matches the set quality (ie if set to 1080p then only movies with matching downloaded quality of 1080p will be synced)
+    tag_filter = Horror # (Sonarr only) sync movies by tag name (seperate multiple tags by comma (no spaces) ie horror,comedy,action)
+    tag_filter_id = 2 # (Sonarr only) sync movies by tag id (seperate multiple tags by comma (no spaces) ie 2,3,4)
 
-    [sonarrB]
+    [*arrB]
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_id = 1 # Syncarr will try to find id from name but you can specify the id directly if you want
@@ -78,7 +81,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 
 ## Requirements
  * Python 3.6 or greater
- * 2x Radarr, Sonarr, or Lidarr servers
+ * 2 Radarr, Sonarr, or Lidarr servers
   
 ---
 

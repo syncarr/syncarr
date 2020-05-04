@@ -100,6 +100,8 @@ sonarrA_profile = get_config_value('SONARR_A_PROFILE', 'profile', 'sonarrA')
 sonarrA_profile_id = get_config_value('SONARR_A_PROFILE_ID', 'profile_id', 'sonarrA')
 sonarrA_profile_filter = get_config_value('SONARR_A_PROFILE_FILTER', 'profile_filter', 'sonarrA')
 sonarrA_profile_filter_id = get_config_value('SONARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrA')
+sonarrA_tag_filter = get_config_value('SONARR_A_TAG_FILTER', 'tag_filter', 'sonarrA')
+sonarrA_tag_filter_id = get_config_value('SONARR_A_TAG_FILTER_ID', 'tag_filter_id', 'sonarrA')
 sonarrA_language = get_config_value('SONARR_A_LANGUAGE', 'language', 'sonarrA')
 sonarrA_language_id = get_config_value('SONARR_A_LANGUAGE_ID', 'language_id', 'sonarrA')
 sonarrA_quality_match = get_config_value('SONARR_A_QUALITY_MATCH', 'quality_match', 'sonarrA')
@@ -111,6 +113,8 @@ sonarrB_profile = get_config_value('SONARR_B_PROFILE', 'profile', 'sonarrB')
 sonarrB_profile_id = get_config_value('SONARR_B_PROFILE_ID', 'profile_id', 'sonarrB')
 sonarrB_profile_filter = get_config_value('SONARR_B_PROFILE_FILTER', 'profile_filter', 'sonarrB')
 sonarrB_profile_filter_id = get_config_value('SONARR_B_PROFILE_FILTER_ID', 'profile_filter_id', 'sonarrB')
+sonarrB_tag_filter = get_config_value('SONARR_B_TAG_FILTER', 'tag_filter', 'sonarrB')
+sonarrB_tag_filter_id = get_config_value('SONARR_B_TAG_FILTER_ID', 'tag_filter_id', 'sonarrB')
 sonarrB_language = get_config_value('SONARR_B_LANGUAGE', 'language', 'sonarrB')
 sonarrB_language_id = get_config_value('SONARR_B_LANGUAGE_ID', 'language_id', 'sonarrB')
 sonarrB_quality_match = get_config_value('SONARR_B_QUALITY_MATCH', 'quality_match', 'sonarrB')
@@ -228,6 +232,8 @@ instanceA_profile_filter_id = ''
 instanceA_language = ''
 instanceA_language_id = ''
 instanceA_quality_match = ''
+instanceA_tag_filter = ''
+instanceA_tag_filter_id = ''
 
 instanceB_url = ''
 instanceB_key = ''
@@ -239,16 +245,18 @@ instanceB_profile_filter_id = ''
 instanceB_language = ''
 instanceB_language_id = ''
 instanceB_quality_match = ''
+instanceB_tag_filter = ''
+instanceB_tag_filter_id = ''
 
 
 api_version = ''  # we are going to detect what API version we are on
 tested_api_version = False  # only get api version once
 
-
 api_content_path = ''  # url path to add content
 api_profile_path = ''  # url path to get quality profiles
 api_status_path = ''  # url path to check on server status
 api_language_path = ''  # url to get lanaguge profiles
+api_tag_path = ''  # url to get tag profiles
 
 is_radarr = False
 is_sonarr = False
@@ -328,6 +336,8 @@ elif sonarrA_url and sonarrB_url:
     instanceA_profile_filter_id = sonarrA_profile_filter_id
     instanceA_language = sonarrA_language
     instanceA_language_id = sonarrA_language_id
+    instanceA_tag_filter = sonarrA_tag_filter and sonarrA_tag_filter.split(',')
+    instanceA_tag_filter_id = sonarrA_tag_filter_id and sonarrA_tag_filter_id.split(',')
     instanceA_quality_match = sonarrA_quality_match
 
     instanceB_url = sonarrB_url
@@ -339,6 +349,8 @@ elif sonarrA_url and sonarrB_url:
     instanceB_profile_filter_id = sonarrB_profile_filter_id
     instanceB_language = sonarrB_language
     instanceB_language_id = sonarrB_language_id
+    instanceB_tag_filter = sonarrB_tag_filter and sonarrB_tag_filter.split(',')
+    instanceB_tag_filter_id = sonarrB_tag_filter_id and sonarrB_tag_filter_id.split(',')
     instanceB_quality_match = sonarrB_quality_match
 
     api_version = V3_API_PATH  # for sonarr try v3 first
@@ -346,13 +358,13 @@ elif sonarrA_url and sonarrB_url:
     api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
     api_language_path = 'languageprofile'
+    api_tag_path = 'tag'
 
     content_id_key = 'tvdbId'
     is_sonarr = True
 
 ########################################################################################################################
 # path generators
-
 
 def get_path(instance_url, api_path, key, changed_api_version=False):
     global api_version, api_profile_path
@@ -378,33 +390,33 @@ def get_path(instance_url, api_path, key, changed_api_version=False):
     url = f"{instance_url}/api/{api_version}{api_path}?apikey={key}"
     return url
 
-
 def get_status_path(instance_url, key, changed_api_version):
     url = get_path(instance_url, api_status_path, key, changed_api_version)
     logger.debug('get_status_path: {}'.format(url))
     return url
-
 
 def get_content_path(instance_url, key):
     url = get_path(instance_url, api_content_path, key)
     logger.debug('get_content_path: {}'.format(url))
     return url
 
-
 def get_language_path(instance_url, key):
     url = get_path(instance_url, api_language_path, key)
     logger.debug('get_language_path: {}'.format(url))
     return url
-
 
 def get_profile_path(instance_url, key):
     url = get_path(instance_url, api_profile_path, key)
     logger.debug('get_profile_path: {}'.format(url))
     return url
 
+def get_tag_path(instance_url, key):
+    url = get_path(instance_url, api_tag_path, key)
+    logger.debug('get_tag_path: {}'.format(url))
+    return url
+
 ########################################################################################################################
 # check for required fields
-
 
 logger.debug({
     'instanceA_url': instanceA_url,
@@ -416,6 +428,8 @@ logger.debug({
     'instanceA_profile_filter_id': instanceA_profile_filter_id,
     'instanceA_language': instanceA_language,
     'instanceA_language_id': instanceA_language_id,
+    'instanceA_tag_filter': instanceA_tag_filter,
+    'instanceA_tag_filter_id': instanceA_tag_filter_id,
     'instanceA_quality_match': instanceA_quality_match,
 
     'instanceB_url': instanceB_url,
@@ -427,6 +441,8 @@ logger.debug({
     'instanceB_profile_filter_id': instanceB_profile_filter_id,
     'instanceB_language': instanceB_language,
     'instanceB_language_id': instanceB_language_id,
+    'instanceB_tag_filter': instanceB_tag_filter,
+    'instanceB_tag_filter_id': instanceB_tag_filter_id,
     'instanceB_quality_match': instanceB_quality_match,
 
     'api_content_path': api_content_path,
