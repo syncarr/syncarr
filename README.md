@@ -9,6 +9,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Support two way sync (one way by default)
 * Set language profiles (Sonarr v3 only)
 * Filter syncing by content file quality (Radarr only)
+* Filter syncing by tags (Sonarr only)
 
 
 ## Configuration
@@ -164,6 +165,7 @@ To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILT
 * Set disable auto searching on new content with `SYNCARR_AUTO_SEARCH=0`  (default 1)
 * Set if you want to NOT monitor new content with `SYNCARR_MONITOR_NEW_CONTENT=0`  (default 1)
 * Match regex quality profiles with `*ARR_A_QUALITY_MATCH` or `*ARR_B_QUALITY_MATCH`
+* Filter by tag names or ids with `*ARR_A_TAG_FILTER` / `*ARR_B_TAG_FILTER` or `*ARR_A_TAG_FILTER_ID` / `*ARR_B_TAG_FILTER_ID`
   
 ---
 ## Troubleshooting
