@@ -57,7 +57,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     url = http://127.0.0.1:8080
     key = XXXXX
     profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
-    quality_match = HD- # regex match to only sync content in instance A that matches this quality profile (example will match HD-720p and HD-1080p profiles but not HD4k)
+    quality_match = HD- # (radarr only) regex match to only sync content that matches the set quality (ie if set to 1080p then only movies with matching downloaded quality of 1080p will be synced)
 
     [sonarrB]
     url = http://127.0.0.1:8080
