@@ -7,6 +7,7 @@ import json
 import configparser
 import sys
 import time
+from os.path import basename
 
 from config import (
     instanceA_url, instanceA_key,  instanceA_path, instanceA_profile,
@@ -168,7 +169,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
             title = content.get('title') or content.get('artistName')
-            path = instanceB_path or content.get('path')
+            path = instanceB_path or basename(content.get('path'))
 
             # if given this, we want to filter from instance by profile id
             if profile_filter_id:
@@ -181,7 +182,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
             # get the POST payload and sync content to instance B
             payload = get_new_content_payload(
-                content=content, 
+                content=content,
                 instance_path=path,
                 instance_profile_id=instanceB_profile_id,
                 instance_url=instanceB_url,
