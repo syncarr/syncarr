@@ -72,8 +72,8 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 
     [general]
     sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A
-    auto_search = 0 # search is automatically started on new content - disable by setting to 0
-    monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced
+    auto_search = 0 # search is automatically started on new content - disable by setting to 0 (default 1)
+    monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced (default 1)
     ```
 
     **Note** If `sync_bidirectionally` is set to `1`, then instance A will require either `profile_id` or `profile` AND `path` as well
