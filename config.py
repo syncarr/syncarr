@@ -173,6 +173,16 @@ if monitor_new_content is not None:
 else:
     monitor_new_content = 1
 
+# enable test mode
+is_test_run = get_config_value('SYNCARR_TEST_RUN', 'test_run', 'general')
+if is_test_run is not None:
+    try:
+        is_test_run = int(is_test_run)
+    except ValueError:
+        is_test_run = 0
+else:
+    is_test_run = 0
+
 ########################################################################################################################
 # setup logger
 
@@ -451,6 +461,7 @@ logger.debug({
 
     'is_sonarr': is_sonarr,
     'is_lidarr': is_lidarr,
+    'is_radarr': is_radarr,
 
     'monitor_new_content': monitor_new_content,
     'sync_bidirectionally': sync_bidirectionally,

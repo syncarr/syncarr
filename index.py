@@ -8,6 +8,7 @@ import configparser
 import sys
 import time
 import re
+from os.path import basename
 
 from config import (
     instanceA_url, instanceA_key,  instanceA_path, instanceA_profile,
@@ -25,7 +26,7 @@ from config import (
 
     is_in_docker, instance_sync_interval_seconds, 
     sync_bidirectionally, auto_search, monitor_new_content,
-    tested_api_version, api_version, V3_API_PATH,
+    tested_api_version, api_version, V3_API_PATH, is_test_run,
 )
 
 
@@ -192,7 +193,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                  instanceB_path, instanceB_profile_id, instanceA_profile_filter_id,
                  instanceB_session, instanceB_url, instanceB_key, instanceA_quality_match,
                  instanceA_tag_filter_id):
-    global is_radarr, is_sonarr
+    global is_radarr, is_sonarr, is_test_run
     search_ids = []
 
     # if given instance A profile id then we want to filter out content without that id
@@ -203,6 +204,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
             title = content.get('title') or content.get('artistName')
+            instance_path = instanceB_path or basename(content.get('path'))
 
             # if given this, we want to filter from instance by profile id
             if instanceA_profile_filter_id:
@@ -218,8 +220,8 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     logging.debug(f'Skipping content {title} - mismatched content_quality {content_quality} with instanceA_quality_match {instanceA_quality_match}')
                     continue
 
-            # if given tag filter then filter by tag - (Sonarr only)
-            if is_sonarr and instanceA_tag_filter_id:
+            # if given tag filter then filter by tag - (Sonarr/Radarr v3 only)
+            if (is_sonarr or is_radarr) and instanceA_tag_filter_id:
                 content_tag_ids = content.get('tags')
                 if not (set(content_tag_ids) & set(instanceA_tag_filter_id)):
                     logging.debug(f'Skipping content {title} - mismatched content_tag_ids {content_tag_ids} with instanceA_tag_filter_id {instanceA_tag_filter_id}')
@@ -229,24 +231,28 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
             # get the POST payload and sync content to instance B
             payload = get_new_content_payload(
-                content=content, 
-                instance_path=instanceB_path, 
-                instance_profile_id=instanceB_profile_id, 
-                instance_url=instanceB_url, 
+                content=content,
+                instance_path=instance_path,
+                instance_profile_id=instanceB_profile_id,
+                instance_url=instanceB_url,
                 instance_language_id=instanceB_language_id,
             )
             instanceB_content_url = get_content_path(instanceB_url, instanceB_key)
-            sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
 
-            # check response and save content id for searching later on if success
-            if sync_response.status_code != 201 and sync_response.status_code != 200:
-                logger.error(f'server sync error for {title} - response: {sync_response.text}')
+            if is_test_run:
+                logging.info('content title "{0}" synced successfully (test only)'.format(title))
             else:
-                try:
-                    search_ids.append(int(sync_response.json()['id']))
-                except:
-                    logger.error(f'Could not decode sync response from {instanceB_content_url}')
-                logging.info('content title "{0}" synced successfully'.format(title))
+                sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
+
+                # check response and save content id for searching later on if success
+                if sync_response.status_code != 201 and sync_response.status_code != 200:
+                    logger.error(f'server sync error for {title} - response: {sync_response.text}')
+                else:
+                    try:
+                        search_ids.append(int(sync_response.json()['id']))
+                    except:
+                        logger.error(f'Could not decode sync response from {instanceB_content_url}')
+                    logging.info('content title "{0}" synced successfully'.format(title))
     
     logging.info(f'{len(search_ids)} contents synced successfully')
 
@@ -321,7 +327,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
 
 
 def sync_content():
-    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language, instanceA_quality_match, instanceB_quality_match, is_sonarr, instanceA_tag_filter_id, instanceA_tag_filter, instanceB_tag_filter_id, instanceB_tag_filter
+    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language, instanceA_quality_match, instanceB_quality_match, is_sonarr, instanceA_tag_filter_id, instanceA_tag_filter, instanceB_tag_filter_id, instanceB_tag_filter, is_radarr
 
     # get sessions
     instanceA_session = requests.Session()
@@ -329,6 +335,7 @@ def sync_content():
     instanceB_session = requests.Session()
     instanceB_session.trust_env = False
 
+    # check if we tested if we are using v2 or v3
     if not tested_api_version:
         check_status(instanceA_session, instanceA_url, instanceA_key, instance_name='A')
         check_status(instanceB_session, instanceB_url, instanceB_key, instance_name='B')
@@ -359,7 +366,7 @@ def sync_content():
     })
 
     # do the same for tag id filters if they exist - (only Sonarr)
-    if is_sonarr:
+    if is_sonarr or is_radarr:
         if not instanceA_tag_filter_id and instanceA_tag_filter:
             instanceA_tag_filter_id = get_tag_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_tag_filter, 'A')
         if not instanceB_tag_filter_id and instanceB_tag_filter:

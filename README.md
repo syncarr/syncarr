@@ -9,7 +9,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Support two way sync (one way by default)
 * Set language profiles (Sonarr v3 only)
 * Filter syncing by content file quality (Radarr only)
-* Filter syncing by tags (Sonarr only)
+* Filter syncing by tags (Sonarr/Radarr v3 only)
 
 
 ## Configuration
@@ -24,7 +24,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     url = http://127.0.0.1:8080
     key = XXXXX
     profile = 1080p
-    path = /data/Movies
+    path = /data/Movies # if not given will use RadarrA path for each movie - may not be what you want!
     ```
  3. Or if you want to sync two Sonarr instances:
     ```ini
@@ -60,8 +60,8 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     key = XXXXX
     profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
     quality_match = HD- # (Radarr only) regex match to only sync content that matches the set quality (ie if set to 1080p then only movies with matching downloaded quality of 1080p will be synced)
-    tag_filter = Horror # (Sonarr only) sync movies by tag name (seperate multiple tags by comma (no spaces) ie horror,comedy,action)
-    tag_filter_id = 2 # (Sonarr only) sync movies by tag id (seperate multiple tags by comma (no spaces) ie 2,3,4)
+    tag_filter = Horror # (Sonarr/Radarr v3 only) sync movies by tag name (seperate multiple tags by comma (no spaces) ie horror,comedy,action)
+    tag_filter_id = 2 # (Sonarr/Radarr v3 only) sync movies by tag id (seperate multiple tags by comma (no spaces) ie 2,3,4)
 
     [*arrB]
     url = http://127.0.0.1:8080
@@ -74,6 +74,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A
     auto_search = 0 # search is automatically started on new content - disable by setting to 0 (default 1)
     monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced (default 1)
+    test_run = 1 # enable test mode - will run through sync program but will not actually sync content
     ```
 
     **Note** If `sync_bidirectionally` is set to `1`, then instance A will require either `profile_id` or `profile` AND `path` as well
@@ -166,6 +167,7 @@ To filter by profile in docker use `ARR_A_PROFILE_FILTER` or `ARR_A_PROFILE_FILT
 * Set if you want to NOT monitor new content with `SYNCARR_MONITOR_NEW_CONTENT=0`  (default 1)
 * Match regex quality profiles with `*ARR_A_QUALITY_MATCH` or `*ARR_B_QUALITY_MATCH`
 * Filter by tag names or ids with `*ARR_A_TAG_FILTER` / `*ARR_B_TAG_FILTER` or `*ARR_A_TAG_FILTER_ID` / `*ARR_B_TAG_FILTER_ID`
+* Enable test mode with `SYNCARR_TEST_RUN`
   
 ---
 ## Troubleshooting
