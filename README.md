@@ -10,6 +10,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Set language profiles (Sonarr v3 only)
 * Filter syncing by content file quality (Radarr only)
 * Filter syncing by tags (Sonarr/Radarr v3 only)
+* Allow for a test run using `test_run` flag (does everything but actually sync)
 
 
 ## Configuration
