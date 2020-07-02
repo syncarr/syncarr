@@ -80,6 +80,7 @@ radarrA_profile_filter_id = get_config_value('RADARR_A_PROFILE_FILTER_ID', 'prof
 radarrA_language = get_config_value('RADARR_A_LANGUAGE', 'language', 'radarrA')
 radarrA_language_id = get_config_value('RADARR_A_LANGUAGE_ID', 'language_id', 'radarrA')
 radarrA_quality_match = get_config_value('RADARR_A_QUALITY_MATCH', 'quality_match', 'radarrA')
+radarrA_blacklist = get_config_value('RADARR_A_BLACKLIST', 'blacklist', 'radarrA')
 
 radarrB_url = get_config_value('RADARR_B_URL', 'url', 'radarrB')
 radarrB_key = get_config_value('RADARR_B_KEY', 'key', 'radarrB')
@@ -91,6 +92,7 @@ radarrB_profile_filter_id = get_config_value('RADARR_B_PROFILE_FILTER_ID', 'prof
 radarrB_language = get_config_value('RADARR_B_LANGUAGE', 'language', 'radarrB')
 radarrB_language_id = get_config_value('RADARR_B_LANGUAGE_ID', 'language_id', 'radarrB')
 radarrB_quality_match = get_config_value('RADARR_B_QUALITY_MATCH', 'quality_match', 'radarrB')
+radarrB_blacklist = get_config_value('RADARR_B_BLACKLIST', 'blacklist', 'radarrB')
 
 # get config settings from ENV or config files for Sonarr
 sonarrA_url = get_config_value('SONARR_A_URL', 'url', 'sonarrA')
@@ -105,6 +107,7 @@ sonarrA_tag_filter_id = get_config_value('SONARR_A_TAG_FILTER_ID', 'tag_filter_i
 sonarrA_language = get_config_value('SONARR_A_LANGUAGE', 'language', 'sonarrA')
 sonarrA_language_id = get_config_value('SONARR_A_LANGUAGE_ID', 'language_id', 'sonarrA')
 sonarrA_quality_match = get_config_value('SONARR_A_QUALITY_MATCH', 'quality_match', 'sonarrA')
+sonarrA_blacklist = get_config_value('SONARR_A_BLACKLIST', 'blacklist', 'sonarrA')
 
 sonarrB_url = get_config_value('SONARR_B_URL', 'url', 'sonarrB')
 sonarrB_key = get_config_value('SONARR_B_KEY', 'key', 'sonarrB')
@@ -118,6 +121,7 @@ sonarrB_tag_filter_id = get_config_value('SONARR_B_TAG_FILTER_ID', 'tag_filter_i
 sonarrB_language = get_config_value('SONARR_B_LANGUAGE', 'language', 'sonarrB')
 sonarrB_language_id = get_config_value('SONARR_B_LANGUAGE_ID', 'language_id', 'sonarrB')
 sonarrB_quality_match = get_config_value('SONARR_B_QUALITY_MATCH', 'quality_match', 'sonarrB')
+sonarrB_blacklist = get_config_value('SONARR_B_BLACKLIST', 'blacklist', 'sonarrB')
 
 # get config settings from ENV or config files for Lidarr
 lidarrA_url = get_config_value('LIDARR_A_URL', 'url', 'lidarrA')
@@ -130,6 +134,7 @@ lidarrA_profile_filter_id = get_config_value('LIDARR_A_PROFILE_FILTER_ID', 'prof
 lidarrA_language = get_config_value('LIDARR_A_LANGUAGE', 'language', 'lidarrA')
 lidarrA_language_id = get_config_value('LIDARR_A_LANGUAGE_ID', 'language_id', 'lidarrA')
 lidarrA_quality_match = get_config_value('LIDARR_A_QUALITY_MATCH', 'quality_match', 'lidarrA')
+lidarrA_blacklist = get_config_value('LIDARR_A_BLACKLIST', 'blacklist', 'lidarrA')
 
 lidarrB_url = get_config_value('LIDARR_B_URL', 'url', 'lidarrB')
 lidarrB_key = get_config_value('LIDARR_B_KEY', 'key', 'lidarrB')
@@ -141,7 +146,7 @@ lidarrB_profile_filter_id = get_config_value('LIDARR_B_PROFILE_FILTER_ID', 'prof
 lidarrB_language = get_config_value('LIDARR_B_LANGUAGE', 'language', 'lidarrB')
 lidarrB_language_id = get_config_value('LIDARR_B_LANGUAGE_ID', 'language_id', 'lidarrB')
 lidarrB_quality_match = get_config_value('LIDARR_B_QUALITY_MATCH', 'quality_match', 'lidarrB')
-
+lidarrB_blacklist = get_config_value('LIDARR_B_BLACKLIST', 'blacklist', 'lidarrB')
 
 # set to search if config not set
 sync_bidirectionally = get_config_value('SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general')
@@ -244,6 +249,7 @@ instanceA_language_id = ''
 instanceA_quality_match = ''
 instanceA_tag_filter = ''
 instanceA_tag_filter_id = ''
+instanceA_blacklist = ''
 
 instanceB_url = ''
 instanceB_key = ''
@@ -257,7 +263,7 @@ instanceB_language_id = ''
 instanceB_quality_match = ''
 instanceB_tag_filter = ''
 instanceB_tag_filter_id = ''
-
+instanceB_blacklist = ''
 
 api_version = ''  # we are going to detect what API version we are on
 tested_api_version = False  # only get api version once
@@ -285,6 +291,7 @@ if radarrA_url and radarrB_url:
     instanceA_language = radarrA_language
     instanceA_language_id = radarrA_language_id
     instanceA_quality_match = radarrA_quality_match
+    instanceA_blacklist = radarrA_blacklist
 
     instanceB_url = radarrB_url
     instanceB_key = radarrB_key
@@ -296,6 +303,7 @@ if radarrA_url and radarrB_url:
     instanceB_language = radarrB_language
     instanceB_language_id = radarrB_language_id
     instanceB_quality_match = radarrB_quality_match
+    instanceB_blacklist = radarrB_blacklist
 
     api_version = V2_API_PATH  # radarr v2 doesnt have version in api url
     api_content_path = 'movie'
@@ -304,37 +312,6 @@ if radarrA_url and radarrB_url:
 
     content_id_key = 'tmdbId'
     is_radarr = True
-
-elif lidarrA_url and lidarrB_url:
-    instanceA_url = lidarrA_url
-    instanceA_key = lidarrA_key
-    instanceA_path = lidarrA_path
-    instanceA_profile = lidarrA_profile
-    instanceA_profile_id = lidarrA_profile_id
-    instanceA_profile_filter = lidarrA_profile_filter
-    instanceA_profile_filter_id = lidarrA_profile_filter_id
-    instanceA_language = lidarrA_language
-    instanceA_language_id = lidarrA_language_id
-    instanceA_quality_match = lidarrA_quality_match
-
-    instanceB_url = lidarrB_url
-    instanceB_key = lidarrB_key
-    instanceB_path = lidarrB_path
-    instanceB_profile = lidarrB_profile
-    instanceB_profile_id = lidarrB_profile_id
-    instanceB_profile_filter = lidarrB_profile_filter
-    instanceB_profile_filter_id = lidarrB_profile_filter_id
-    instanceB_language = lidarrB_language
-    instanceB_language_id = lidarrB_language_id
-    instanceB_quality_match = lidarrB_quality_match
-
-    api_version = V1_API_PATH
-    api_content_path = 'artist'
-    api_profile_path = 'qualityprofile'
-    api_status_path = 'system/status'
-
-    content_id_key = 'foreignArtistId'
-    is_lidarr = True
 
 elif sonarrA_url and sonarrB_url:
     instanceA_url = sonarrA_url
@@ -349,6 +326,7 @@ elif sonarrA_url and sonarrB_url:
     instanceA_tag_filter = sonarrA_tag_filter and sonarrA_tag_filter.split(',')
     instanceA_tag_filter_id = sonarrA_tag_filter_id and sonarrA_tag_filter_id.split(',')
     instanceA_quality_match = sonarrA_quality_match
+    instanceA_blacklist = sonarrA_blacklist
 
     instanceB_url = sonarrB_url
     instanceB_key = sonarrB_key
@@ -362,6 +340,7 @@ elif sonarrA_url and sonarrB_url:
     instanceB_tag_filter = sonarrB_tag_filter and sonarrB_tag_filter.split(',')
     instanceB_tag_filter_id = sonarrB_tag_filter_id and sonarrB_tag_filter_id.split(',')
     instanceB_quality_match = sonarrB_quality_match
+    instanceB_blacklist = sonarrB_blacklist
 
     api_version = V3_API_PATH  # for sonarr try v3 first
     api_content_path = 'series'
@@ -372,6 +351,47 @@ elif sonarrA_url and sonarrB_url:
 
     content_id_key = 'tvdbId'
     is_sonarr = True
+
+elif lidarrA_url and lidarrB_url:
+    instanceA_url = lidarrA_url
+    instanceA_key = lidarrA_key
+    instanceA_path = lidarrA_path
+    instanceA_profile = lidarrA_profile
+    instanceA_profile_id = lidarrA_profile_id
+    instanceA_profile_filter = lidarrA_profile_filter
+    instanceA_profile_filter_id = lidarrA_profile_filter_id
+    instanceA_language = lidarrA_language
+    instanceA_language_id = lidarrA_language_id
+    instanceA_quality_match = lidarrA_quality_match
+    instanceA_blacklist = lidarrA_blacklist
+
+    instanceB_url = lidarrB_url
+    instanceB_key = lidarrB_key
+    instanceB_path = lidarrB_path
+    instanceB_profile = lidarrB_profile
+    instanceB_profile_id = lidarrB_profile_id
+    instanceB_profile_filter = lidarrB_profile_filter
+    instanceB_profile_filter_id = lidarrB_profile_filter_id
+    instanceB_language = lidarrB_language
+    instanceB_language_id = lidarrB_language_id
+    instanceB_quality_match = lidarrB_quality_match
+    instanceB_blacklist = lidarrB_blacklist
+
+    api_version = V1_API_PATH
+    api_content_path = 'artist'
+    api_profile_path = 'qualityprofile'
+    api_status_path = 'system/status'
+
+    content_id_key = 'foreignArtistId'
+    is_lidarr = True
+
+
+# format blacklists
+if instanceA_blacklist:
+    instanceA_blacklist = instanceA_blacklist.split(',')
+
+if instanceB_blacklist:
+    instanceB_blacklist = instanceB_blacklist.split(',')
 
 ########################################################################################################################
 # path generators
@@ -448,6 +468,7 @@ logger.debug({
     'instanceA_tag_filter': instanceA_tag_filter,
     'instanceA_tag_filter_id': instanceA_tag_filter_id,
     'instanceA_quality_match': instanceA_quality_match,
+    'instanceA_blacklist': instanceA_blacklist,
 
     'instanceB_url': instanceB_url,
     'instanceB_key': instanceB_key,
@@ -461,6 +482,7 @@ logger.debug({
     'instanceB_tag_filter': instanceB_tag_filter,
     'instanceB_tag_filter_id': instanceB_tag_filter_id,
     'instanceB_quality_match': instanceB_quality_match,
+    'instanceB_blacklist': instanceB_blacklist,
 
     'api_content_path': api_content_path,
     'api_profile_path': api_profile_path,

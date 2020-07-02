@@ -14,12 +14,12 @@ from config import (
     instanceA_url, instanceA_key,  instanceA_path, instanceA_profile,
     instanceA_profile_id, instanceA_profile_filter, instanceA_profile_filter_id,
     instanceA_language_id, instanceA_language, instanceA_quality_match,
-    instanceA_tag_filter_id, instanceA_tag_filter,
+    instanceA_tag_filter_id, instanceA_tag_filter, instanceA_blacklist,
 
     instanceB_url, instanceB_key, instanceB_path, instanceB_profile,
     instanceB_profile_id, instanceB_profile_filter, instanceB_profile_filter_id,
     instanceB_language_id, instanceB_language, instanceB_quality_match,
-    instanceB_tag_filter_id, instanceB_tag_filter,
+    instanceB_tag_filter_id, instanceB_tag_filter, instanceB_blacklist,
 
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
     get_status_path, get_content_path, get_profile_path, get_language_path, get_tag_path,
@@ -193,7 +193,7 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
 def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
                  instanceB_path, instanceB_profile_id, instanceA_profile_filter_id,
                  instanceB_session, instanceB_url, instanceB_key, instanceA_quality_match,
-                 instanceA_tag_filter_id):
+                 instanceA_tag_filter_id, instanceA_blacklist):
     global is_radarr, is_sonarr, is_test_run
     search_ids = []
 
@@ -226,6 +226,18 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                 content_tag_ids = content.get('tags')
                 if not (set(content_tag_ids) & set(instanceA_tag_filter_id)):
                     logging.debug(f'Skipping content {title} - mismatched content_tag_ids {content_tag_ids} with instanceA_tag_filter_id {instanceA_tag_filter_id}')
+                    continue
+
+            # if black list given then dont sync matching slugs/ids
+            if instanceA_blacklist:
+                title_slug = content.get('titleSlug') or content.get('foreignArtistId')
+                if title_slug in instanceA_blacklist:
+                    logging.debug(f'Skipping content {title} - blacklist slug: {title_slug}')
+                    continue
+
+                content_id = str(content.get('id'))
+                if content_id in instanceA_blacklist:
+                    logging.debug(f'Skipping content {title} - blacklist ID: {content_id}')
                     continue
 
             logging.info(f'syncing content title "{title}"')
@@ -328,7 +340,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
 
 
 def sync_content():
-    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language, instanceA_quality_match, instanceB_quality_match, is_sonarr, instanceA_tag_filter_id, instanceA_tag_filter, instanceB_tag_filter_id, instanceB_tag_filter, is_radarr
+    global instanceA_profile_id, instanceA_profile, instanceB_profile_id, instanceB_profile, instanceA_profile_filter, instanceA_profile_filter_id, instanceB_profile_filter, instanceB_profile_filter_id, tested_api_version, instanceA_language_id, instanceA_language, instanceB_language_id, instanceB_language, instanceA_quality_match, instanceB_quality_match, is_sonarr, instanceA_tag_filter_id, instanceA_tag_filter, instanceB_tag_filter_id, instanceB_tag_filter, is_radarr, instanceA_blacklist, instanceB_blacklist
 
     # get sessions
     instanceA_session = requests.Session()
@@ -424,6 +436,7 @@ def sync_content():
         instanceB_key=instanceB_key,
         instanceA_quality_match=instanceA_quality_match,
         instanceA_tag_filter_id=instanceA_tag_filter_id,
+        instanceA_blacklist=instanceA_blacklist
     )
 
     # if given bidirectional flag then sync from instance B to instance A
@@ -442,6 +455,7 @@ def sync_content():
             instanceB_key=instanceA_key,
             instanceA_quality_match=instanceB_quality_match,
             instanceA_tag_filter_id=instanceB_tag_filter_id,
+            instanceA_blacklist=instanceB_blacklist
         )
 
 ########################################################################################################################
