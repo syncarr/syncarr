@@ -61,9 +61,9 @@ def get_config_value(env_key, config_key, config_section):
 
 BASE_CONFIG = 'config.conf'
 if DEV:
-    settingsFilename = os.path.join(os.getcwd(), 'dev-{}'.format(BASE_CONFIG))
+    settingsFilename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'dev-{}'.format(BASE_CONFIG))
 else:
-    settingsFilename = os.path.join(os.getcwd(), BASE_CONFIG)
+    settingsFilename = os.path.join(os.path.abspath(os.path.dirname(__file__)), BASE_CONFIG)
 
 config = configparser.ConfigParser()
 config.read(settingsFilename)
@@ -376,6 +376,7 @@ elif sonarrA_url and sonarrB_url:
 ########################################################################################################################
 # path generators
 
+
 def get_path(instance_url, api_path, key, changed_api_version=False):
     global api_version, api_profile_path
 
@@ -400,25 +401,30 @@ def get_path(instance_url, api_path, key, changed_api_version=False):
     url = f"{instance_url}/api/{api_version}{api_path}?apikey={key}"
     return url
 
+
 def get_status_path(instance_url, key, changed_api_version):
     url = get_path(instance_url, api_status_path, key, changed_api_version)
     logger.debug('get_status_path: {}'.format(url))
     return url
+
 
 def get_content_path(instance_url, key):
     url = get_path(instance_url, api_content_path, key)
     logger.debug('get_content_path: {}'.format(url))
     return url
 
+
 def get_language_path(instance_url, key):
     url = get_path(instance_url, api_language_path, key)
     logger.debug('get_language_path: {}'.format(url))
     return url
 
+
 def get_profile_path(instance_url, key):
     url = get_path(instance_url, api_profile_path, key)
     logger.debug('get_profile_path: {}'.format(url))
     return url
+
 
 def get_tag_path(instance_url, key):
     url = get_path(instance_url, api_tag_path, key)
@@ -427,6 +433,7 @@ def get_tag_path(instance_url, key):
 
 ########################################################################################################################
 # check for required fields
+
 
 logger.debug({
     'instanceA_url': instanceA_url,

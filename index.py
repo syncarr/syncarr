@@ -24,7 +24,7 @@ from config import (
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
     get_status_path, get_content_path, get_profile_path, get_language_path, get_tag_path,
 
-    is_in_docker, instance_sync_interval_seconds, 
+    is_in_docker, instance_sync_interval_seconds,
     sync_bidirectionally, auto_search, monitor_new_content,
     tested_api_version, api_version, V3_API_PATH, is_test_run,
 )
@@ -74,8 +74,8 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['year'] = content.get('year')
         payload['tmdbId'] = content.get('tmdbId')
         payload['titleSlug'] = content.get('titleSlug')
-        payload['addOptions'] = { 
-            **add_options, 
+        payload['addOptions'] = {
+            **add_options,
             **{'searchForMovie': search_missing}
         }
 
@@ -93,6 +93,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
 
     logger.debug(payload)
     return payload
+
 
 def get_quality_profiles(instance_session, instance_url, instance_key):
     instance_profile_url = get_profile_path(instance_url, instance_key)
@@ -143,7 +144,7 @@ def get_tag_from_id(instance_session, instance_url, instance_key, instance_tag, 
         for instance_item in instance_tag:
             if item.get('label').lower() == instance_item.lower():
                 tag_ids.append(item)
-    
+
     if not tag_ids:
         logger.error(f'Could not find tag_id for instance {instance_name} and tag {instance_tags}')
         sys.exit(0)
@@ -181,7 +182,7 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
 
     instance_language_id = language.get('language', {}).get('id')
     logger.debug(f'found id "{instance_language_id}" from language "{instance_language}" for instance {instance_name}')
-    
+
     if instance_language_id is None:
         logger.error(f'language_id is None for instance {instance_name} and language {instance_language}')
         sys.exit(0)
@@ -212,7 +213,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                 if instanceA_profile_filter_id != quality_profile_id:
                     logging.debug(f'Skipping content {title} - mismatched quality_profile_id {quality_profile_id} with instanceA_profile_filter_id {instanceA_profile_filter_id}')
                     continue
-            
+
             # if given quality filter we want to filter if quality from instanceA isnt high enough yet
             if is_radarr and instanceA_quality_match:
                 content_quality = content.get('movieFile', {}).get('quality', {}).get('quality', {}).get('name', '')
@@ -253,7 +254,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     except:
                         logger.error(f'Could not decode sync response from {instanceB_content_url}')
                     logging.info('content title "{0}" synced successfully'.format(title))
-    
+
     logging.info(f'{len(search_ids)} contents synced successfully')
 
 
@@ -322,7 +323,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
             sys.exit(0)
 
         logger.debug(f"{instance_status_url} version {status_response.get('version')}")
-    
+
     return status_response
 
 
@@ -340,7 +341,7 @@ def sync_content():
         check_status(instanceA_session, instanceA_url, instanceA_key, instance_name='A')
         check_status(instanceB_session, instanceB_url, instanceB_key, instance_name='B')
         tested_api_version = True
-            
+
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:
         instanceA_profile_id = get_profile_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_profile, 'A')
@@ -382,19 +383,19 @@ def sync_content():
     if is_sonarr:
         if not instanceA_language_id and instanceA_language:
             instanceA_language_id = get_language_from_id(
-                instance_session=instanceA_session, 
-                instance_url=instanceA_url, 
-                instance_key=instanceA_key, 
-                instance_language=instanceA_language, 
+                instance_session=instanceA_session,
+                instance_url=instanceA_url,
+                instance_key=instanceA_key,
+                instance_language=instanceA_language,
                 instance_name='A'
             )
 
         if not instanceB_language_id and instanceB_language:
             instanceB_language_id = get_language_from_id(
-                instance_session=instanceB_session, 
-                instance_url=instanceB_url, 
-                instance_key=instanceB_key, 
-                instance_language=instanceB_language, 
+                instance_session=instanceB_session,
+                instance_url=instanceB_url,
+                instance_key=instanceB_key,
+                instance_language=instanceB_language,
                 instance_name='B'
             )
         logger.debug({
@@ -412,13 +413,13 @@ def sync_content():
 
     logger.info('syncing content from instance A to instance B')
     sync_servers(
-        instanceA_contents=instanceA_contents, 
-        instanceB_contentIds=instanceB_contentIds, 
+        instanceA_contents=instanceA_contents,
+        instanceB_contentIds=instanceB_contentIds,
         instanceB_language_id=instanceB_language_id,
-        instanceB_path=instanceB_path, 
-        instanceB_profile_id=instanceB_profile_id, 
-        instanceB_session=instanceB_session, 
-        instanceB_url=instanceB_url, 
+        instanceB_path=instanceB_path,
+        instanceB_profile_id=instanceB_profile_id,
+        instanceB_session=instanceB_session,
+        instanceB_url=instanceB_url,
         instanceA_profile_filter_id=instanceA_profile_filter_id,
         instanceB_key=instanceB_key,
         instanceA_quality_match=instanceA_quality_match,
@@ -430,13 +431,13 @@ def sync_content():
         logger.info('syncing content from instance B to instance A')
 
         sync_servers(
-            instanceA_contents=instanceB_contents, 
-            instanceB_contentIds=instanceA_contentIds, 
+            instanceA_contents=instanceB_contents,
+            instanceB_contentIds=instanceA_contentIds,
             instanceB_language_id=instanceA_language_id,
-            instanceB_path=instanceA_path, 
-            instanceB_profile_id=instanceA_profile_id, 
-            instanceB_session=instanceA_session, 
-            instanceB_url=instanceA_url, 
+            instanceB_path=instanceA_path,
+            instanceB_profile_id=instanceA_profile_id,
+            instanceB_session=instanceA_session,
+            instanceB_url=instanceA_url,
             instanceA_profile_filter_id=instanceB_profile_filter_id,
             instanceB_key=instanceA_key,
             instanceA_quality_match=instanceB_quality_match,
@@ -444,6 +445,7 @@ def sync_content():
         )
 
 ########################################################################################################################
+
 
 if is_in_docker:
     logger.info('syncing every {} seconds'.format(instance_sync_interval_seconds))
