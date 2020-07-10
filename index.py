@@ -8,7 +8,7 @@ import configparser
 import sys
 import time
 import re
-from os.path import basename
+from os.path import dirname
 
 from config import (
     instanceA_url, instanceA_key,  instanceA_path, instanceA_profile,
@@ -205,7 +205,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
     for content in instanceA_contents:
         if content[content_id_key] not in instanceB_contentIds:
             title = content.get('title') or content.get('artistName')
-            instance_path = instanceB_path or basename(content.get('path'))
+            instance_path = instanceB_path or dirname(content.get('path'))
 
             # if given this, we want to filter from instance by profile id
             if instanceA_profile_filter_id:
