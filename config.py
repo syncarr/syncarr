@@ -524,7 +524,6 @@ if not content_id_key:
 
 # if two way sync need instance A path and profile
 if sync_bidirectionally:
-    assert instanceA_path
     if not instanceB_profile_id and not instanceB_profile:
         logger.error('profile_id or profile is required for *arr instance A if sync bidirectionally is enabled')
         sys.exit(0)
