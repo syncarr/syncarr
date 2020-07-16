@@ -463,7 +463,9 @@ def sync_content():
 
 def exit_system():
     """we dont want to exit if in docker"""
-    if not is_in_docker:
+    if is_in_docker:
+        raise Exception
+    else:
         sys.exit(0)
 
 
@@ -474,5 +476,8 @@ sync_content()
 
 if is_in_docker:
     while True:
-        time.sleep(instance_sync_interval_seconds)
-        sync_content()
+        try:
+            time.sleep(instance_sync_interval_seconds)
+            sync_content()
+        except Exception as inst:
+            d = inst
