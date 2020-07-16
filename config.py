@@ -64,6 +64,8 @@ if DEV:
     settingsFilename = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'dev-{}'.format(BASE_CONFIG))
 else:
     settingsFilename = os.path.join(os.path.abspath(os.path.dirname(__file__)), BASE_CONFIG)
+    sys.tracebacklimit = 0  # dont show stack traces in prod mode
+
 
 config = configparser.ConfigParser()
 config.read(settingsFilename)

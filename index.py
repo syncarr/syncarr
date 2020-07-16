@@ -100,7 +100,7 @@ def get_quality_profiles(instance_session, instance_url, instance_key):
     profiles_response = instance_session.get(instance_profile_url)
     if profiles_response.status_code != 200:
         logger.error(f'Could not get profile id from {instance_profile_url}')
-        sys.exit(0)
+        exit_system()
 
     instance_profiles = None
     try:
@@ -108,7 +108,7 @@ def get_quality_profiles(instance_session, instance_url, instance_key):
         return instance_profiles
     except:
         logger.error(f'Could not decode profile id from {instance_profile_url}')
-        sys.exit(0)
+        exit_system()
 
 
 def get_profile_from_id(instance_session, instance_url, instance_key, instance_profile, instance_name=''):
@@ -117,7 +117,7 @@ def get_profile_from_id(instance_session, instance_url, instance_key, instance_p
     profile = next((item for item in instance_profiles if item["name"].lower() == instance_profile.lower()), False)
     if not profile:
         logger.error('Could not find profile_id for instance {} profile {}'.format(instance_name, instance_profile))
-        sys.exit(0)
+        exit_system()
 
     instance_profile_id = profile.get('id')
     logger.debug(f'found profile_id (instance{instance_name}) "{instance_profile_id}" from profile "{instance_profile}"')
@@ -130,14 +130,14 @@ def get_tag_from_id(instance_session, instance_url, instance_key, instance_tag, 
     tag_response = instance_session.get(instance_tag_url)
     if tag_response.status_code != 200:
         logger.error(f'Could not get tag id from (instance{instance_name}) {instance_tag_url} - only works on Sonarr')
-        sys.exit(0)
+        exit_system()
 
     instance_tags = None
     try:
         instance_tags = tag_response.json()
     except:
         logger.error(f'Could not decode tag id from {instance_tag_url}')
-        sys.exit(0)
+        exit_system()
 
     tag_ids = []
     for item in instance_tags:
@@ -147,14 +147,14 @@ def get_tag_from_id(instance_session, instance_url, instance_key, instance_tag, 
 
     if not tag_ids:
         logger.error(f'Could not find tag_id for instance {instance_name} and tag {instance_tags}')
-        sys.exit(0)
+        exit_system()
 
     instance_tag_ids = [tag.get('id') for tag in tag_ids]
     logger.debug(f'found id "{instance_tag_ids}" from tag "{instance_tag}" for instance {instance_name}')
 
     if instance_tag_ids is None:
         logger.error(f'tag_id is None for instance {instance_name} and tag {instance_tag}')
-        sys.exit(0)
+        exit_system()
 
     return instance_tag_ids
 
@@ -164,28 +164,28 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
     language_response = instance_session.get(instance_language_url)
     if language_response.status_code != 200:
         logger.error(f'Could not get language id from (instance{instance_name}) {instance_language_url} - only works on sonarr v3')
-        sys.exit(0)
+        exit_system()
 
     instance_languages = None
     try:
         instance_languages = language_response.json()
     except:
         logger.error(f'Could not decode language id from {instance_language_url}')
-        sys.exit(0)
+        exit_system()
 
     instance_languages = instance_languages[0]['languages']
     language = next((item for item in instance_languages if item.get('language', {}).get('name').lower() == instance_language.lower()), False)
 
     if not language:
         logger.error(f'Could not find language_id for instance {instance_name} and language {instance_language}')
-        sys.exit(0)
+        exit_system()
 
     instance_language_id = language.get('language', {}).get('id')
     logger.debug(f'found id "{instance_language_id}" from language "{instance_language}" for instance {instance_name}')
 
     if instance_language_id is None:
         logger.error(f'language_id is None for instance {instance_name} and language {instance_language}')
-        sys.exit(0)
+        exit_system()
 
     return instance_language_id
 
@@ -278,13 +278,13 @@ def get_instance_contents(instance_url, instance_key, instance_session, instance
 
     if instance_contents.status_code != 200:
         logger.error('instance{} server error - response {}'.format(instance_name, instance_contents.status_code))
-        sys.exit(0)
+        exit_system()
     else:
         try:
             instance_contents = instance_contents.json()
         except:
             logger.error(f'Could not decode contents from {instance_content_url}')
-            sys.exit(0)
+            exit_system()
 
     for content_to_sync in instance_contents:
         instance_contentIds.append(content_to_sync[content_id_key])
@@ -310,7 +310,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
             status_response = check_status(instance_session, instance_url, instance_key, instance_name, True)
         elif status_response.status_code != 200:
             logger.error(error_message)
-            sys.exit(0)
+            exit_system()
 
     except:
         if not changed_api_version and not is_lidarr:
@@ -320,7 +320,7 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
 
     if status_response is None:
         logger.error(error_message)
-        sys.exit(0)
+        exit_system()
     else:
         try:
             status_response = status_response.json()
@@ -328,11 +328,11 @@ def check_status(instance_session, instance_url, instance_key, instance_name='',
             if not isinstance(status_response, dict):
                 logger.error(
                     f"Could not retrieve status for {instance_status_url}: {status_response} - {error}")
-                sys.exit(0)
+                exit_system()
 
         if(status_response.get('error')):
             logger.error(f"{instance_status_url} error {status_response.get('error')}")
-            sys.exit(0)
+            exit_system()
 
         logger.debug(f"{instance_status_url} version {status_response.get('version')}")
 
@@ -461,6 +461,14 @@ def sync_content():
 ########################################################################################################################
 
 
+def exit_system():
+    """we dont want to exit if in docker"""
+    if is_in_docker:
+        raise Exception
+    else:
+        sys.exit(0)
+
+
 if is_in_docker:
     logger.info('syncing every {} seconds'.format(instance_sync_interval_seconds))
 
@@ -468,5 +476,8 @@ sync_content()
 
 if is_in_docker:
     while True:
-        time.sleep(instance_sync_interval_seconds)
-        sync_content()
+        try:
+            time.sleep(instance_sync_interval_seconds)
+            sync_content()
+        except Exception as inst:
+            d = inst
