@@ -468,5 +468,8 @@ sync_content()
 
 if is_in_docker:
     while True:
-        time.sleep(instance_sync_interval_seconds)
-        sync_content()
+        try:
+            time.sleep(instance_sync_interval_seconds)
+            sync_content()
+        except:
+            pass
