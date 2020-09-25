@@ -344,9 +344,7 @@ def sync_content():
 
     # get sessions
     instanceA_session = requests.Session()
-    instanceA_session.trust_env = False
     instanceB_session = requests.Session()
-    instanceB_session.trust_env = False
 
     # check if we tested if we are using v2 or v3
     if not tested_api_version:
