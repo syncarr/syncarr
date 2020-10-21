@@ -25,7 +25,7 @@ from config import (
     get_status_path, get_content_path, get_profile_path, get_language_path, get_tag_path,
 
     is_in_docker, instance_sync_interval_seconds,
-    sync_bidirectionally, auto_search, monitor_new_content,
+    sync_bidirectionally, auto_search, skip_missing, monitor_new_content,
     tested_api_version, api_version, V3_API_PATH, is_test_run,
 )
 
@@ -206,6 +206,13 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
         if content[content_id_key] not in instanceB_contentIds:
             title = content.get('title') or content.get('artistName')
             instance_path = instanceB_path or dirname(content.get('path'))
+
+            # if skipping missing files, we want to skip any that don't have files
+            if skip_missing:
+                content_has_file = content.get('hasFile')
+                if not content_has_file:
+                    logging.debug(f'Skipping content {title} - file missing')
+                    continue
 
             # if given this, we want to filter from instance by profile id
             if instanceA_profile_filter_id:

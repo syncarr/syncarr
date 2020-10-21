@@ -170,6 +170,16 @@ if auto_search is not None:
 else:
     auto_search = 1
 
+# set to skip missing if config not set
+skip_missing = get_config_value('SYNCARR_SKIP_MISSING', 'skip_missing', 'general')
+if skip_missing is not None:
+    try:
+        skip_missing = int(skip_missing)
+    except ValueError:
+        skip_missing = 0
+else:
+    skip_missing = 1
+
 # set to monitor if config not set
 monitor_new_content = get_config_value('SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', 'general')
 if monitor_new_content is not None:
@@ -497,6 +507,7 @@ logger.debug({
     'monitor_new_content': monitor_new_content,
     'sync_bidirectionally': sync_bidirectionally,
     'auto_search': auto_search,
+    'skip_missing': skip_missing,
     'api_version': api_version,
 })
 
