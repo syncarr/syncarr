@@ -7,7 +7,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Supports Docker for multiple instances
 * Can set interval for syncing
 * Support two way sync (one way by default)
-* Skips content with missing files
+* Skip content with missing files
 * Set language profiles (Sonarr v3 only)
 * Filter syncing by content file quality (Radarr only)
 * Filter syncing by tags (Sonarr/Radarr v3 only)
