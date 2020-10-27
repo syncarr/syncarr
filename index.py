@@ -208,7 +208,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
             instance_path = instanceB_path or dirname(content.get('path'))
 
             # if skipping missing files, we want to skip any that don't have files
-            if skip_missing:
+            if is_radarr and skip_missing:
                 content_has_file = content.get('hasFile')
                 if not content_has_file:
                     logging.debug(f'Skipping content {title} - file missing')
