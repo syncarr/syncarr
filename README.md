@@ -7,7 +7,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Supports Docker for multiple instances
 * Can set interval for syncing
 * Support two way sync (one way by default)
-* Skip content with missing files
+* Skip content with missing files (Radarr only)
 * Set language profiles (Sonarr v3 only)
 * Filter syncing by content file quality (Radarr only)
 * Filter syncing by tags (Sonarr/Radarr v3 only)
@@ -77,7 +77,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     [general]
     sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A
     auto_search = 0 # search is automatically started on new content - disable by setting to 0 (default 1)
-    skip_missing = 1 # content with missing files are skipped on sync - disable by setting to 0 (default 1)
+    skip_missing = 1 # content with missing files are skipped on sync - disable by setting to 0 (default 1) (Radarr only)
     monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced (default 1)
     test_run = 1 # enable test mode - will run through sync program but will not actually sync content
     ```
