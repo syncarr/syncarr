@@ -74,6 +74,7 @@ def get_new_content_payload(content, instance_path, instance_profile_id, instanc
         payload['year'] = content.get('year')
         payload['tmdbId'] = content.get('tmdbId')
         payload['titleSlug'] = content.get('titleSlug')
+        payload['tags'] = content.get('tags')
         payload['addOptions'] = {
             **add_options,
             **{'searchForMovie': search_missing}
@@ -129,7 +130,7 @@ def get_tag_from_id(instance_session, instance_url, instance_key, instance_tag, 
     instance_tag_url = get_tag_path(instance_url, instance_key)
     tag_response = instance_session.get(instance_tag_url)
     if tag_response.status_code != 200:
-        logger.error(f'Could not get tag id from (instance{instance_name}) {instance_tag_url} - only works on Sonarr')
+        logger.error(f'Could not get tag id from (instance{instance_name}) {instance_tag_url} - only works on Sonarr/Radarr')
         exit_system()
 
     instance_tags = None
@@ -385,7 +386,7 @@ def sync_content():
         'instanceBprofile_filter': instanceB_profile_filter,
     })
 
-    # do the same for tag id filters if they exist - (only Sonarr)
+    # do the same for tag id filters if they exist - (only Sonarr/Radarr)
     if is_sonarr or is_radarr:
         if not instanceA_tag_filter_id and instanceA_tag_filter:
             instanceA_tag_filter_id = get_tag_from_id(instanceA_session, instanceA_url, instanceA_key, instanceA_tag_filter, 'A')
