@@ -150,55 +150,26 @@ lidarrB_language_id = get_config_value('LIDARR_B_LANGUAGE_ID', 'language_id', 'l
 lidarrB_quality_match = get_config_value('LIDARR_B_QUALITY_MATCH', 'quality_match', 'lidarrB')
 lidarrB_blacklist = get_config_value('LIDARR_B_BLACKLIST', 'blacklist', 'lidarrB')
 
-# set to search if config not set
-sync_bidirectionally = get_config_value('SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', 'general')
-if sync_bidirectionally is not None:
-    try:
-        sync_bidirectionally = int(sync_bidirectionally)
-    except ValueError:
-        sync_bidirectionally = 0
-else:
-    sync_bidirectionally = 0
 
-# set to search if config not set
-auto_search = get_config_value('SYNCARR_AUTO_SEARCH', 'auto_search', 'general')
-if auto_search is not None:
-    try:
-        auto_search = int(auto_search)
-    except ValueError:
-        auto_search = 0
-else:
-    auto_search = 1
+def set_general_option(env_name, config_name, default_value):
+    """gets a general config value"""
+    config_value = get_config_value(env_name, config_name, 'general')
+    if config_value is not None:
+        try:
+            config_value = int(config_value)
+        except ValueError:
+            config_value = default_value
+    else:
+        config_value = default_value
+    return config_value
 
-# set to skip missing if config not set
-skip_missing = get_config_value('SYNCARR_SKIP_MISSING', 'skip_missing', 'general')
-if skip_missing is not None:
-    try:
-        skip_missing = int(skip_missing)
-    except ValueError:
-        skip_missing = 0
-else:
-    skip_missing = 1
-
-# set to monitor if config not set
-monitor_new_content = get_config_value('SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', 'general')
-if monitor_new_content is not None:
-    try:
-        monitor_new_content = int(monitor_new_content)
-    except ValueError:
-        monitor_new_content = 1
-else:
-    monitor_new_content = 1
-
-# enable test mode
-is_test_run = get_config_value('SYNCARR_TEST_RUN', 'test_run', 'general')
-if is_test_run is not None:
-    try:
-        is_test_run = int(is_test_run)
-    except ValueError:
-        is_test_run = 0
-else:
-    is_test_run = 0
+# get general options
+sync_bidirectionally = set_general_option('SYNCARR_BIDIRECTIONAL_SYNC', 'bidirectional', default_value=0)
+auto_search = set_general_option('SYNCARR_AUTO_SEARCH', 'auto_search', default_value=1)
+skip_missing = set_general_option('SYNCARR_SKIP_MISSING', 'skip_missing', default_value=1)
+monitor_new_content = set_general_option('SYNCARR_MONITOR_NEW_CONTENT', 'monitor_new_content', default_value=1)
+sync_monitor = set_general_option('SYNCARR_SYNC_MONITOR', 'sync_monitor', default_value=0)
+is_test_run = set_general_option('SYNCARR_TEST_RUN', 'test_run', default_value=0)
 
 ########################################################################################################################
 # setup logger
@@ -277,8 +248,8 @@ instanceB_tag_filter = ''
 instanceB_tag_filter_id = ''
 instanceB_blacklist = ''
 
-api_version = ''  # we are going to detect what API version we are on
-tested_api_version = False  # only get api version once
+api_version = ''
+
 
 api_content_path = ''  # url path to add content
 api_profile_path = ''  # url path to get quality profiles
@@ -317,9 +288,9 @@ if radarrA_url and radarrB_url:
     instanceB_quality_match = radarrB_quality_match
     instanceB_blacklist = radarrB_blacklist
 
-    api_version = V2_API_PATH  # radarr v2 doesnt have version in api url
+    api_version = V3_API_PATH
     api_content_path = 'movie'
-    api_profile_path = 'profile'
+    api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
 
     content_id_key = 'tmdbId'
@@ -354,7 +325,7 @@ elif sonarrA_url and sonarrB_url:
     instanceB_quality_match = sonarrB_quality_match
     instanceB_blacklist = sonarrB_blacklist
 
-    api_version = V3_API_PATH  # for sonarr try v3 first
+    api_version = V3_API_PATH
     api_content_path = 'series'
     api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
@@ -412,14 +383,6 @@ if instanceB_blacklist:
 def get_path(instance_url, api_path, key, changed_api_version=False):
     global api_version, api_profile_path
 
-    if changed_api_version:
-        api_version = V3_API_PATH
-
-    # for sonarr - we check v3 first then v2
-    if is_sonarr and changed_api_version:
-        api_version = V2_API_PATH
-        api_profile_path = 'profile'
-
     logger.debug(DEBUG_LINE)
     logger.debug({
         'instance_url': instance_url,
@@ -443,6 +406,11 @@ def get_status_path(instance_url, key, changed_api_version):
 def get_content_path(instance_url, key):
     url = get_path(instance_url, api_content_path, key)
     logger.debug('get_content_path: {}'.format(url))
+    return url
+
+def get_content_put_path(instance_url, key, content_id):
+    url = get_path(instance_url, f'{api_content_path}/{content_id}', key)
+    logger.debug('get_content_put_path: {}'.format(url))
     return url
 
 
@@ -509,6 +477,7 @@ logger.debug({
     'auto_search': auto_search,
     'skip_missing': skip_missing,
     'api_version': api_version,
+    'sync_monitor': sync_monitor,
 })
 
 if not instanceA_url:
