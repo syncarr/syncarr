@@ -22,15 +22,16 @@ from config import (
     instanceB_tag_filter_id, instanceB_tag_filter, instanceB_blacklist,
 
     content_id_key, logger, is_sonarr, is_radarr, is_lidarr,
-    get_status_path, get_content_path, get_profile_path, get_language_path, get_tag_path,
+    get_status_path, get_content_path, get_profile_path, get_language_path, get_tag_path, get_content_put_path,
 
     is_in_docker, instance_sync_interval_seconds,
     sync_bidirectionally, auto_search, skip_missing, monitor_new_content,
-    api_version, is_test_run,
+    api_version, is_test_run, sync_monitor
 )
 
 
-def get_new_content_payload(content, instance_path, instance_profile_id, instance_url, instance_language_id=None):
+def get_content_details(content, instance_path, instance_profile_id, instance_url, instance_language_id=None):
+    """gets details of a content item"""
     global monitor_new_content, auto_search
 
     images = content.get('images')
@@ -193,8 +194,8 @@ def get_language_from_id(instance_session, instance_url, instance_key, instance_
 def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds,
                  instanceB_path, instanceB_profile_id, instanceA_profile_filter_id,
                  instanceB_session, instanceB_url, instanceB_key, instanceA_quality_match,
-                 instanceA_tag_filter_id, instanceA_blacklist):
-    global is_radarr, is_sonarr, is_test_run
+                 instanceA_tag_filter_id, instanceA_blacklist, instanceB_contents):
+    global is_radarr, is_sonarr, is_test_run, sync_monitor
     search_ids = []
 
     # if given instance A profile id then we want to filter out content without that id
@@ -203,7 +204,9 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
     # for each content id in instance A, check if it needs to be synced to instance B
     for content in instanceA_contents:
-        if content[content_id_key] not in instanceB_contentIds:
+        content_not_synced = content[content_id_key] not in instanceB_contentIds
+        # only skip alrerady synced items if we arent syncing monitoring as well 
+        if content_not_synced or sync_monitor:
             title = content.get('title') or content.get('artistName')
             instance_path = instanceB_path or dirname(content.get('path'))
 
@@ -247,11 +250,10 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     logging.debug(f'Skipping content {title} - blacklist ID: {content_id}')
                     continue
 
-            logging.info(f'syncing content title "{title}"')
 
-            # get the POST payload and sync content to instance B
-            payload = get_new_content_payload(
-                content=content,
+            # generate content from instance A to sync into instance B
+            formatted_content = get_content_details(
+                content=dict(content),
                 instance_path=instance_path,
                 instance_profile_id=instanceB_profile_id,
                 instance_url=instanceB_url,
@@ -261,9 +263,10 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
             if is_test_run:
                 logging.info('content title "{0}" synced successfully (test only)'.format(title))
-            else:
-                sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(payload))
-
+            elif content_not_synced:
+                # sync content if not synced
+                logging.info(f'syncing content title "{title}"')
+                sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(formatted_content))
                 # check response and save content id for searching later on if success
                 if sync_response.status_code != 201 and sync_response.status_code != 200:
                     logger.error(f'server sync error for {title} - response: {sync_response.text}')
@@ -273,6 +276,28 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     except:
                         logger.error(f'Could not decode sync response from {instanceB_content_url}')
                     logging.info('content title "{0}" synced successfully'.format(title))
+
+            elif sync_monitor:
+                # else if is already synced and we want to sync monitoring then sync that now
+                
+                # find matching content from instance B to check monitored status
+                matching_content_instanceB = list(filter(lambda content_instanceB: content_instanceB['titleSlug'] == content.get('titleSlug'), instanceB_contents))
+                if(len(matching_content_instanceB) == 1):
+                    matching_content_instanceB = matching_content_instanceB[0]
+                    # if we found a content match from instance B, then check monitored status - if different then sync from A to B
+                    if matching_content_instanceB['monitored'] != content['monitored']:
+                        matching_content_instanceB['monitored'] = content['monitored']
+                        instanceB_content_url = get_content_put_path(instanceB_url, instanceB_key, matching_content_instanceB.get('id'))
+                        sync_response = instanceB_session.put(instanceB_content_url, data=json.dumps(matching_content_instanceB))
+                        # check response and save content id for searching later on if success
+                        if sync_response.status_code != 202:
+                            logger.error(f'server monitoring sync error for {title} - response: {sync_response.text}')
+                        else:
+                            try:
+                                search_ids.append(int(sync_response.json()['id']))
+                            except:
+                                logger.error(f'Could not decode sync response from {instanceB_content_url}')
+                            logging.info('content title "{0}" monitoring synced successfully'.format(title))
 
     logging.info(f'{len(search_ids)} contents synced successfully')
 
@@ -417,6 +442,7 @@ def sync_content():
     logger.info('syncing content from instance A to instance B')
     sync_servers(
         instanceA_contents=instanceA_contents,
+        instanceB_contents=instanceB_contents,
         instanceB_contentIds=instanceB_contentIds,
         instanceB_language_id=instanceB_language_id,
         instanceB_path=instanceB_path,
@@ -436,6 +462,7 @@ def sync_content():
 
         sync_servers(
             instanceA_contents=instanceB_contents,
+            instanceB_contents=instanceA_contents,
             instanceB_contentIds=instanceA_contentIds,
             instanceB_language_id=instanceA_language_id,
             instanceB_path=instanceA_path,
