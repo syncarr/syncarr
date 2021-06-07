@@ -1,7 +1,8 @@
 # Syncarr
+
 Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a 4k Radarr/Sonarr instance to a 1080p Radarr/Sonarr instance.
 
-* Supports Radarr/Sonarr version 2 and 3.
+* Supports Radarr/Sonarr v3.
 * Can sync by `profile` name or `profile_id`
 * Filter what media gets synced by `profile` name or `profile_id`
 * Supports Docker for multiple instances
@@ -13,11 +14,12 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 * Filter syncing by tags (Sonarr/Radarr v3 only)
 * Allow for a test run using `test_run` flag (does everything but actually sync)
 
-
 ## Configuration
+
  1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
  2. Add the profile name (case insensitive) and movie path for the Radarr instance the movies will be synced to:
-    ```ini
+
+   ```ini
     [radarrA]
     url = https://4k.example.com:443
     key = XXXXX
@@ -28,7 +30,9 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     profile = 1080p
     path = /data/Movies # if not given will use RadarrA path for each movie - may not be what you want!
     ```
+
  3. Or if you want to sync two Sonarr instances:
+
     ```ini
     [sonarrA]
     url = https://4k.example.com:443
@@ -39,8 +43,9 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     key = XXXXX
     profile = 1080p
     path = /data/Shows
- 
+
  4. Or if you want to sync two Lidarr instances:
+ 5. 
     ```ini
     [lidarrA]
     url = https://lossless.example.com:443
@@ -55,7 +60,8 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
     
     **Note** you cannot have a mix of Radarr, Lidarr, or Sonarr config setups at the same time.
 
- 5. Optional Configuration
+ 6. Optional Configuration
+ 
     ```ini
     [*arrA]
     url = http://127.0.0.1:8080
@@ -106,7 +112,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
 ## Docker Compose
 This script can run through a docker container with a set interval (default every 5 minutes)
 
-```
+```bash
 syncarr:
     image: syncarr/syncarr:latest
     container_name: syncarr
@@ -123,7 +129,7 @@ syncarr:
 
 or
 
-```
+```bash
 syncarr:
     image: syncarr/syncarr:latest
     container_name: syncarr
@@ -140,7 +146,7 @@ syncarr:
 
 or
 
-```
+```bash
 syncarr:
     image: syncarr/syncarr:latest
     container_name: syncarr
@@ -156,14 +162,17 @@ syncarr:
 ```
 
 ---
+
 ## Docker
+
 For just plain docker (radarr example):
 
-```
+```bash
 docker run -it --rm --name syncarr -e RADARR_A_URL=https://4k.example.com:443 -e RADARR_A_KEY=XXXXX -e RADARR_B_URL=http://127.0.0.1:8080 -e RADARR_B_KEY=XXXXX -e RADARR_B_PROFILE=1080p -e RADARR_B_PATH=/data/Movies -e SYNC_INTERVAL_SECONDS=300 syncarr/syncarr
 ```
 
-**Notes** 
+## Notes
+
 * You can also specify the `PROFILE_ID` directly through the `*ARR_A_PROFILE_ID` and `*ARR_B_PROFILE_ID` ENV variables.
 To filter by profile in docker use `*ARR_A_PROFILE_FILTER` or `*ARR_A_PROFILE_FILTER_ID` ENV variables. (same for `*arr_B` in bidirectional sync)
 * Language for new content (Sonarr v3 only) can be set by `SONARR_B_LANGUAGE` or `SONARR_B_LANGUAGE_ID` (and `SONARR_B` if bidirectional sync)
@@ -176,16 +185,20 @@ To filter by profile in docker use `*ARR_A_PROFILE_FILTER` or `*ARR_A_PROFILE_FI
 * add blacklist with `*ARR_A_BLACKLIST` and `**ARR_B_BLACKLIST`
   
 ---
+
 ## Troubleshooting
+
 If you need to troubleshoot syncarr, then you can either set the log level through the config file:
 
 ```ini
 [general]
 log_level = 10
 ```
-    
+
 Or in docker, set the `LOG_LEVEL` ENV variable. Default is set to `20` (info only) but you can set to `10` to get debug info as well. When pasting debug logs online, **make sure to remove any apikeys and any other data you don't want others to see.**
 
 ---
+
 ## Disclaimer
+
 Back up your instances before trying this out. I am not responsible for any lost data.

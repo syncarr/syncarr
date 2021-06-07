@@ -26,7 +26,7 @@ from config import (
 
     is_in_docker, instance_sync_interval_seconds,
     sync_bidirectionally, auto_search, skip_missing, monitor_new_content,
-    tested_api_version, api_version, V3_API_PATH, is_test_run,
+    api_version, is_test_run,
 )
 
 
@@ -279,7 +279,6 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
 def get_instance_contents(instance_url, instance_key, instance_session, instance_name=''):
     instance_contentIds = []
-
     instance_content_url = get_content_path(instance_url, instance_key)
     instance_contents = instance_session.get(instance_content_url)
 
@@ -296,34 +295,25 @@ def get_instance_contents(instance_url, instance_key, instance_session, instance
     for content_to_sync in instance_contents:
         instance_contentIds.append(content_to_sync[content_id_key])
 
-    logger.debug('{} contents in instance{}'.format(len(instance_contentIds), instance_name))
+    logger.debug('{} contents in instance {}'.format(len(instance_contentIds), instance_name))
     return instance_contents, instance_contentIds
 
 
-def check_status(instance_session, instance_url, instance_key, instance_name='', changed_api_version=False):
+def check_status(instance_session, instance_url, instance_key, instance_name=''):
     global api_version
 
-    instance_status_url = get_status_path(
-        instance_url, instance_key, changed_api_version)
+    instance_status_url = get_status_path(instance_url, instance_key)
     error_message = f'Could not connect to instance{instance_name}: {instance_status_url}'
     status_response = None
 
     try:
         status_response = instance_session.get(instance_status_url)
-
-        # only test again if not lidarr and we haven't tested v3 already
-        if status_response.status_code != 200 and not changed_api_version and not is_lidarr:
-            logger.debug(f'check api_version again')
-            status_response = check_status(instance_session, instance_url, instance_key, instance_name, True)
-        elif status_response.status_code != 200:
+        if status_response.status_code != 200:
             logger.error(error_message)
             exit_system()
-
     except:
-        if not changed_api_version and not is_lidarr:
-            logger.debug(f'check api_version again exception')
-            status_response = check_status(
-                instance_session, instance_url, instance_key, instance_name, True)
+        logger.error(error_message)
+        exit_system()
 
     if status_response is None:
         logger.error(error_message)
@@ -354,12 +344,6 @@ def sync_content():
     instanceA_session.trust_env = False
     instanceB_session = requests.Session()
     instanceB_session.trust_env = False
-
-    # check if we tested if we are using v2 or v3
-    if not tested_api_version:
-        check_status(instanceA_session, instanceA_url, instanceA_key, instance_name='A')
-        check_status(instanceB_session, instanceB_url, instanceB_key, instance_name='B')
-        tested_api_version = True
 
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:

@@ -277,8 +277,8 @@ instanceB_tag_filter = ''
 instanceB_tag_filter_id = ''
 instanceB_blacklist = ''
 
-api_version = ''  # we are going to detect what API version we are on
-tested_api_version = False  # only get api version once
+api_version = ''
+
 
 api_content_path = ''  # url path to add content
 api_profile_path = ''  # url path to get quality profiles
@@ -317,9 +317,9 @@ if radarrA_url and radarrB_url:
     instanceB_quality_match = radarrB_quality_match
     instanceB_blacklist = radarrB_blacklist
 
-    api_version = V2_API_PATH  # radarr v2 doesnt have version in api url
+    api_version = V3_API_PATH
     api_content_path = 'movie'
-    api_profile_path = 'profile'
+    api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
 
     content_id_key = 'tmdbId'
@@ -354,7 +354,7 @@ elif sonarrA_url and sonarrB_url:
     instanceB_quality_match = sonarrB_quality_match
     instanceB_blacklist = sonarrB_blacklist
 
-    api_version = V3_API_PATH  # for sonarr try v3 first
+    api_version = V3_API_PATH
     api_content_path = 'series'
     api_profile_path = 'qualityprofile'
     api_status_path = 'system/status'
@@ -411,14 +411,6 @@ if instanceB_blacklist:
 
 def get_path(instance_url, api_path, key, changed_api_version=False):
     global api_version, api_profile_path
-
-    if changed_api_version:
-        api_version = V3_API_PATH
-
-    # for sonarr - we check v3 first then v2
-    if is_sonarr and changed_api_version:
-        api_version = V2_API_PATH
-        api_profile_path = 'profile'
 
     logger.debug(DEBUG_LINE)
     logger.debug({
