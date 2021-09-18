@@ -44,7 +44,7 @@ def get_content_details(content, instance_path, instance_profile_id, instance_ur
 
     payload = {
         content_id_key: content.get(content_id_key),
-        'qualityProfileId': instance_profile_id or content.get('qualityProfileId'),
+        'qualityProfileId': int(instance_profile_id or content.get('qualityProfileId')),
         'monitored': monitored,
         'rootFolderPath': instance_path,
         'images': images,
