@@ -1,4 +1,4 @@
-FROM python:3.6
+FROM python:3.11.0b5
 
 ENV IS_IN_DOCKER 1
 
