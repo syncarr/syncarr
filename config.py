@@ -79,6 +79,8 @@ radarrA_profile = get_config_value('RADARR_A_PROFILE', 'profile', 'radarrA')
 radarrA_profile_id = get_config_value('RADARR_A_PROFILE_ID', 'profile_id', 'radarrA')
 radarrA_profile_filter = get_config_value('RADARR_A_PROFILE_FILTER', 'profile_filter', 'radarrA')
 radarrA_profile_filter_id = get_config_value('RADARR_A_PROFILE_FILTER_ID', 'profile_filter_id', 'radarrA')
+radarrA_tag_filter = get_config_value('RADARR_A_TAG_FILTER', 'tag_filter', 'radarrA')
+radarrA_tag_filter_id = get_config_value('RADARR_A_TAG_FILTER_ID', 'tag_filter_id', 'radarrA')
 radarrA_language = get_config_value('RADARR_A_LANGUAGE', 'language', 'radarrA')
 radarrA_language_id = get_config_value('RADARR_A_LANGUAGE_ID', 'language_id', 'radarrA')
 radarrA_quality_match = get_config_value('RADARR_A_QUALITY_MATCH', 'quality_match', 'radarrA')
@@ -91,6 +93,9 @@ radarrB_profile = get_config_value('RADARR_B_PROFILE', 'profile', 'radarrB')
 radarrB_profile_id = get_config_value('RADARR_B_PROFILE_ID', 'profile_id', 'radarrB')
 radarrB_profile_filter = get_config_value('RADARR_B_PROFILE_FILTER', 'profile_filter', 'radarrB')
 radarrB_profile_filter_id = get_config_value('RADARR_B_PROFILE_FILTER_ID', 'profile_filter_id', 'radarrB')
+radarrB_tag_filter = get_config_value('RADARR_B_TAG_FILTER', 'tag_filter', 'radarrB')
+radarrB_tag_filter_id = get_config_value('RADARR_B_TAG_FILTER_ID', 'tag_filter_id', 'radarrB')
+
 radarrB_language = get_config_value('RADARR_B_LANGUAGE', 'language', 'radarrB')
 radarrB_language_id = get_config_value('RADARR_B_LANGUAGE_ID', 'language_id', 'radarrB')
 radarrB_quality_match = get_config_value('RADARR_B_QUALITY_MATCH', 'quality_match', 'radarrB')
@@ -273,6 +278,8 @@ if radarrA_url and radarrB_url:
     instanceA_profile_filter_id = radarrA_profile_filter_id
     instanceA_language = radarrA_language
     instanceA_language_id = radarrA_language_id
+    instanceA_tag_filter = radarrA_tag_filter and radarrA_tag_filter.split(',')
+    instanceA_tag_filter_id = radarrA_tag_filter_id and radarrA_tag_filter_id.split(',')
     instanceA_quality_match = radarrA_quality_match
     instanceA_blacklist = radarrA_blacklist
 
@@ -285,6 +292,8 @@ if radarrA_url and radarrB_url:
     instanceB_profile_filter_id = radarrB_profile_filter_id
     instanceB_language = radarrB_language
     instanceB_language_id = radarrB_language_id
+    instanceB_tag_filter = radarrB_tag_filter and radarrB_tag_filter.split(',')
+    instanceB_tag_filter_id = radarrB_tag_filter_id and radarrB_tag_filter_id.split(',')
     instanceB_quality_match = radarrB_quality_match
     instanceB_blacklist = radarrB_blacklist
 

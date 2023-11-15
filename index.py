@@ -211,7 +211,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
             instance_path = instanceB_path or dirname(content.get('path'))
 
             # if skipping missing files, we want to skip any that don't have files
-            if skip_missing:
+            if is_radarr and skip_missing:
                 content_has_file = content.get('hasFile')
                 if not content_has_file:
                     logging.debug(f'Skipping content {title} - file missing')
@@ -253,7 +253,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
 
             # generate content from instance A to sync into instance B
             formatted_content = get_content_details(
-                content=dict(content),
+                content,
                 instance_path=instance_path,
                 instance_profile_id=instanceB_profile_id,
                 instance_url=instanceB_url,
@@ -266,7 +266,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
             elif content_not_synced:
                 # sync content if not synced
                 logging.info(f'syncing content title "{title}"')
-                sync_response = instanceB_session.post(instanceB_content_url, data=json.dumps(formatted_content))
+                sync_response = instanceB_session.post(instanceB_content_url, json=formatted_content)
                 # check response and save content id for searching later on if success
                 if sync_response.status_code != 201 and sync_response.status_code != 200:
                     logger.error(f'server sync error for {title} - response: {sync_response.text}')
@@ -288,7 +288,7 @@ def sync_servers(instanceA_contents, instanceB_language_id, instanceB_contentIds
                     if matching_content_instanceB['monitored'] != content['monitored']:
                         matching_content_instanceB['monitored'] = content['monitored']
                         instanceB_content_url = get_content_put_path(instanceB_url, instanceB_key, matching_content_instanceB.get('id'))
-                        sync_response = instanceB_session.put(instanceB_content_url, data=json.dumps(matching_content_instanceB))
+                        sync_response = instanceB_session.put(instanceB_content_url, json=matching_content_instanceB)
                         # check response and save content id for searching later on if success
                         if sync_response.status_code != 202:
                             logger.error(f'server monitoring sync error for {title} - response: {sync_response.text}')
