@@ -366,9 +366,7 @@ def sync_content():
 
     # get sessions
     instanceA_session = requests.Session()
-    instanceA_session.trust_env = False
     instanceB_session = requests.Session()
-    instanceB_session.trust_env = False
 
     # if given a profile instead of a profile id then try to find the profile id
     if not instanceA_profile_id and instanceA_profile:
