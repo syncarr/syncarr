@@ -1,3 +1,9 @@
+## Note: This utility is no longer necessary
+
+Radarr and Sonarr now allow other *arr instances as "Lists" from which to automatically import movies, including from certain quality profiles or tags.
+
+There is a [guide here](https://trash-guides.info/Sonarr/Tips/Sync-2-radarr-sonarr/), but it's pretty self-explanatory if you go to Settings --> Lists in your secondary *arr instance.
+
 # Syncarr
 
 Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a 4k Radarr/Sonarr instance to a 1080p Radarr/Sonarr instance.
