@@ -19,7 +19,7 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
  1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
  2. Add the profile name (case insensitive) and movie path for the Radarr instance the movies will be synced to:
 
-   ```ini
+    ```ini
     [radarrA]
     url = https://4k.example.com:443
     key = XXXXX
