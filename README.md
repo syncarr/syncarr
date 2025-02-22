@@ -19,77 +19,77 @@ Syncs two Radarr/Sonarr/Lidarr servers through the web API. Useful for syncing a
  1. Edit the config.conf file and enter your servers URLs and API keys for each server.  
  2. Add the profile name (case insensitive) and movie path for the Radarr instance the movies will be synced to:
 
-   ```ini
-    [radarrA]
-    url = https://4k.example.com:443
-    key = XXXXX
+ ```ini
+ [radarrA]
+ url = https://4k.example.com:443
+ key = XXXXX
     
-    [radarrB]
-    url = http://127.0.0.1:8080
-    key = XXXXX
-    profile = 1080p
-    path = /data/Movies # if not given will use RadarrA path for each movie - may not be what you want!
-    ```
+ [radarrB]
+ url = http://127.0.0.1:8080
+ key = XXXXX
+ profile = 1080p
+ path = /data/Movies # if not given will use RadarrA path for each movie - may not be what you want!
+```
 
- 3. Or if you want to sync two Sonarr instances:
+3. Or if you want to sync two Sonarr instances:
 
-    ```ini
-    [sonarrA]
-    url = https://4k.example.com:443
-    key = XXXXX
+```ini
+[sonarrA]
+url = https://4k.example.com:443
+key = XXXXX
     
-    [sonarrB]
-    url = http://127.0.0.1:8080
-    key = XXXXX
-    profile = 1080p
-    path = /data/Shows
+[sonarrB]
+url = http://127.0.0.1:8080
+key = XXXXX
+profile = 1080p
+path = /data/Shows
+```
 
- 4. Or if you want to sync two Lidarr instances:
- 5. 
-    ```ini
-    [lidarrA]
-    url = https://lossless.example.com:443
-    key = XXXXX
+4. Or if you want to sync two Lidarr instances:
+```ini
+[lidarrA]
+url = https://lossless.example.com:443
+key = XXXXX
     
-    [lidarrB]
-    url = http://127.0.0.1:8080
-    key = XXXXX
-    profile = Standard
-    path = /data/Music
-    ```
+[lidarrB]
+url = http://127.0.0.1:8080
+key = XXXXX
+profile = Standard
+path = /data/Music
+```
     
-    **Note** you cannot have a mix of Radarr, Lidarr, or Sonarr config setups at the same time.
+**Note** you cannot have a mix of Radarr, Lidarr, or Sonarr config setups at the same time.
 
- 6. Optional Configuration
+5. Optional Configuration
  
-    ```ini
-    [*arrA]
-    url = http://127.0.0.1:8080
-    key = XXXXX
-    profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
-    quality_match = HD- # (Radarr only) regex match to only sync content that matches the set quality (ie if set to 1080p then only movies with matching downloaded quality of 1080p will be synced)
-    tag_filter = Horror # (Sonarr/Radarr) sync movies by tag name (seperate multiple tags by comma (no spaces) ie horror,comedy,action)
-    tag_filter_id = 2 # (Sonarr/Radarr) sync movies by tag id (seperate multiple tags by comma (no spaces) ie 2,3,4)
-    blacklist = movie-name-12,movie-name-43,432534,8e38819d-71be-9e7d-b41d-f1df91b01d3f # comma seperated list of content slugs OR IDs you want to never sync from A to B (no spaces)
-         # the slug is the part of the URL after "/movies/" (for Radarr), "/series/" (for Sonarr), or "/artist/" (for Lidarr)
+```ini
+[*arrA]
+url = http://127.0.0.1:8080
+key = XXXXX
+profile_filter = 1080p # add a filter to only sync contents belonging to this profile (can set by profile_filter_id as well)
+quality_match = HD- # (Radarr only) regex match to only sync content that matches the set quality (ie if set to 1080p then only movies with matching downloaded quality of 1080p will be synced)
+tag_filter = Horror # (Sonarr/Radarr) sync movies by tag name (seperate multiple tags by comma (no spaces) ie horror,comedy,action)
+tag_filter_id = 2 # (Sonarr/Radarr) sync movies by tag id (seperate multiple tags by comma (no spaces) ie 2,3,4)
+blacklist = movie-name-12,movie-name-43,432534,8e38819d-71be-9e7d-b41d-f1df91b01d3f # comma seperated list of content slugs OR IDs you want to never sync from A to B (no spaces)
+# the slug is the part of the URL after "/movies/" (for Radarr), "/series/" (for Sonarr), or "/artist/" (for Lidarr)
 
-    [*arrB]
-    url = http://127.0.0.1:8080
-    key = XXXXX
-    profile_id = 1 # Syncarr will try to find id from name but you can specify the id directly if you want
-    language = Vietnamese # can set language for new content added (Sonarr) (can set by language_id as well)
-    path = /data/Movies
+[*arrB]
+url = http://127.0.0.1:8080
+key = XXXXX
+profile_id = 1 # Syncarr will try to find id from name but you can specify the id directly if you want
+language = Vietnamese # can set language for new content added (Sonarr) (can set by language_id as well)
+path = /data/Movies
 
-    [general]
-    sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A (default 0)
-    auto_search = 0 # search is automatically started on new content - disable by setting to 0 (default 1)
-    skip_missing = 1 # content with missing files are skipped on sync - disable by setting to 0 (default 1) (Radarr only)
-    monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced (default 1)
-    test_run = 1 # enable test mode - will run through sync program but will not actually sync content (default 0)
-    sync_monitor = 1 # if set to 1 will sync if the content is monitored or not to instance B (default 0)
-    ```
+[general]
+sync_bidirectionally = 1 # sync from instance A to B **AND** instance B to A (default 0)
+auto_search = 0 # search is automatically started on new content - disable by setting to 0 (default 1)
+skip_missing = 1 # content with missing files are skipped on sync - disable by setting to 0 (default 1) (Radarr only)
+monitor_new_content = 0 # set to 0 to never monitor new content synced or to 1 to always monitor new content synced (default 1)
+test_run = 1 # enable test mode - will run through sync program but will not actually sync content (default 0)
+sync_monitor = 1 # if set to 1 will sync if the content is monitored or not to instance B (default 0)
+```
 
-    **Note** If `sync_bidirectionally` is set to `1`, then instance A will require either `profile_id` or `profile` AND `path` as well
+**Note** If `sync_bidirectionally` is set to `1`, then instance A will require either `profile_id` or `profile` AND `path` as well
 
 ---
 
